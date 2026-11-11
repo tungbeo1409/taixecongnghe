@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cuốc Xe">
     <meta name="description" content="Bộ đếm cuốc xe cho tài xế công nghệ">
     <title>Trợ Lý Cuốc Xe Tài Xế</title>
     <link rel="manifest" href="./manifest.webmanifest">
@@ -12,105 +15,838 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
-        .btn-touch { transition: transform .08s ease, background-color .15s ease; }
-        .btn-touch:active { transform: scale(.94); }
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .btn-touch {
+            transition: transform 0.08s ease, background-color 0.15s ease;
+        }
+        .btn-touch:active {
+            transform: scale(0.94);
+        }
         [hidden] { display: none !important; }
-        nav[aria-label="Điều hướng chính"] { z-index: 100; pointer-events: auto; }
-        nav[aria-label="Điều hướng chính"] button { position: relative; z-index: 101; pointer-events: auto; cursor: pointer; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-full flex flex-col max-w-md mx-auto relative">
-    <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm z-10">
+<body class="bg-slate-100 text-slate-800 h-full flex flex-col justify-between max-w-md mx-auto relative overflow-x-hidden">
+    <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shrink-0 shadow-xs z-30">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white"><i class="fa-solid fa-gauge-high"></i></div>
-            <div><h1 class="text-sm font-black text-slate-900">Trợ Lý Cuốc Xe</h1><p class="text-[10px] text-slate-500 font-semibold">Tối ưu & Quản lý thu nhập</p></div>
+            <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-black shadow-sm">
+                <i class="fa-solid fa-gauge-high text-sm"></i>
+            </div>
+            <div>
+                <h1 class="text-sm font-black text-slate-900 tracking-tight">Trợ Lý Cuốc Xe</h1>
+                <p class="text-[10px] text-slate-500 font-semibold">Tối ưu & Quản lý tỉ lệ</p>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <button type="button" onclick="toggleRounding()" id="roundingBtn" class="px-2 py-2 rounded-xl border text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border-emerald-300" aria-label="Bật hoặc tắt làm tròn">Làm tròn: Bật</button>
-            <button type="button" onclick="resetCounts()" class="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 text-slate-700" title="Đặt lại số cuốc" aria-label="Đặt lại số cuốc"><i class="fa-solid fa-trash-can"></i></button>
+        <div class="flex items-center gap-1.5">
+            <button onclick="toggleRounding()" id="roundingBtn" class="px-2.5 py-1.5 rounded-xl border text-[11px] font-extrabold flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border-emerald-300 shadow-xs">
+                <i class="fa-solid fa-circle-check text-xs"></i>
+                <span id="roundingText">Làm tròn: Bật</span>
+            </button>
+            <button onclick="resetAll()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold shadow-xs hover:bg-slate-200 text-rose-600" title="Đặt lại từ đầu">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+            <button onclick="openHistoryModal()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold shadow-xs" title="Lịch sử">
+                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+            </button>
         </div>
     </header>
 
-    <div id="toast" role="status" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg opacity-0 pointer-events-none transition-opacity">Thông báo</div>
+    <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg transition-all duration-300 opacity-0 pointer-events-none">
+        Thông báo
+    </div>
 
-    <main class="flex-1 overflow-y-auto p-4 pb-24">
-        <section id="tabContentRate" class="space-y-3">
-            <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex items-center justify-between">
-                <div class="flex items-center gap-2.5"><div id="timerIconBg" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-stopwatch"></i></div><div><span class="text-[10px] font-bold text-slate-400 block uppercase">Thời gian chạy</span><span id="timerDisplay" class="text-base font-black text-slate-900">00:00:00</span></div></div>
-                <div class="flex items-center gap-2"><button type="button" onclick="resetShiftTimer()" id="timerResetBtn" class="btn-touch w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-600" title="Đặt lại thời gian về 00:00:00" aria-label="Đặt lại thời gian chạy"><i class="fa-solid fa-rotate-left"></i></button><button type="button" onclick="toggleShiftTimer()" id="timerToggleBtn" class="btn-touch px-3 py-2 rounded-xl bg-emerald-500 text-white text-xs font-black flex items-center gap-2"><i id="timerBtnIcon" class="fa-solid fa-play"></i><span id="timerBtnText">Bắt đầu ca</span></button></div>
+    <main class="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 pb-20">
+        <div id="tabContentRate" class="flex-1 flex flex-col justify-between min-h-0 space-y-3">
+            <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div id="timerIconBg" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shadow-xs transition-all">
+                        <i id="timerIcon" class="fa-solid fa-stopwatch"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Tính thời gian chạy</span>
+                        <span id="timerDisplay" class="text-base font-black text-slate-900 tracking-tight">00:00:00</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="resetShiftTimer()" id="timerResetBtn" class="btn-touch w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 flex items-center justify-center" title="Đặt lại thời gian">
+                        <i class="fa-solid fa-rotate-left text-xs"></i>
+                    </button>
+                    <button onclick="toggleShiftTimer()" id="timerToggleBtn" class="btn-touch px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all">
+                        <i id="timerBtnIcon" class="fa-solid fa-play text-xs"></i>
+                        <span id="timerBtnText">Bắt đầu ca</span>
+                    </button>
+                </div>
             </div>
-            <div class="grid grid-cols-2 gap-2.5">
-                <div class="bg-white border border-slate-200 rounded-2xl p-3"><div class="flex justify-between text-[11px] font-bold text-slate-500"><span>Hoàn thành</span><i class="fa-solid fa-circle-check text-emerald-500"></i></div><div class="my-2 flex justify-between items-baseline"><b id="pctCompletion" class="text-xl text-slate-900">100%</b><span id="rawCompletion" class="text-[10px] text-slate-400"></span></div><div class="bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barCompletion" class="bg-emerald-500 h-full"></div></div></div>
-                <div class="bg-white border border-slate-200 rounded-2xl p-3"><div class="flex justify-between text-[11px] font-bold text-slate-500"><span>Nhận chuyến</span><i class="fa-solid fa-hand-holding-hand text-blue-500"></i></div><div class="my-2 flex justify-between items-baseline"><b id="pctAccept" class="text-xl text-slate-900">100%</b><span id="rawAccept" class="text-[10px] text-slate-400"></span></div><div class="bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barAccept" class="bg-blue-500 h-full"></div></div></div>
-                <div class="bg-white border border-slate-200 rounded-2xl p-3"><div class="flex justify-between text-[11px] font-bold text-slate-500"><span>Tài xế hủy</span><i class="fa-solid fa-ban text-rose-500"></i></div><div class="my-2 flex justify-between items-baseline"><b id="pctDriverCancel" class="text-xl text-slate-900">0%</b><span id="rawDriverCancel" class="text-[10px] text-slate-400"></span></div><div class="bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barDriverCancel" class="bg-rose-500 h-full"></div></div></div>
-                <div class="bg-white border border-slate-200 rounded-2xl p-3"><div class="flex justify-between text-[11px] font-bold text-slate-500"><span>Khách hủy</span><i class="fa-solid fa-user-xmark text-amber-500"></i></div><div class="my-2 flex justify-between items-baseline"><b id="pctCustomerCancel" class="text-xl text-slate-900">0%</b><span id="rawCustomerCancel" class="text-[10px] text-slate-400"></span></div><div class="bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barCustomerCancel" class="bg-amber-500 h-full"></div></div></div>
-            </div>
-            <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200"><div><span class="text-xs font-black block">Tổng phát đến</span><span class="text-[10px] text-slate-400">Tổng số chuyến được gửi</span></div><b id="valIncoming" class="text-lg px-4 py-1.5 bg-white border border-slate-200 rounded-xl">0</b></div>
-            <div class="grid grid-cols-2 gap-2.5">
-                <button type="button" onclick="updateCount('ignored',1)" class="btn-touch text-left bg-orange-50 border-2 border-orange-200 rounded-2xl p-3"><span class="text-xs font-black text-orange-700">Trôi</span><div class="flex justify-between items-center mt-2"><span id="valIgnored" class="text-3xl font-black text-orange-600">0</span><span onclick="event.stopPropagation();updateCount('ignored',-1)" class="rounded-lg bg-white px-3 py-1 text-orange-700" aria-label="Giảm số chuyến trôi">−</span></div></button>
-                <button type="button" onclick="updateCount('driverCancel',1)" class="btn-touch text-left bg-rose-50 border-2 border-rose-200 rounded-2xl p-3"><span class="text-xs font-black text-rose-700">Tài xế hủy</span><div class="flex justify-between items-center mt-2"><span id="valDriverCancel" class="text-3xl font-black text-rose-600">0</span><span onclick="event.stopPropagation();updateCount('driverCancel',-1)" class="rounded-lg bg-white px-3 py-1 text-rose-700" aria-label="Giảm số chuyến tài xế hủy">−</span></div></button>
-                <button type="button" onclick="updateCount('customerCancel',1)" class="btn-touch text-left bg-amber-50 border-2 border-amber-200 rounded-2xl p-3"><span class="text-xs font-black text-amber-700">Khách hủy</span><div class="flex justify-between items-center mt-2"><span id="valCustomerCancel" class="text-3xl font-black text-amber-600">0</span><span onclick="event.stopPropagation();updateCount('customerCancel',-1)" class="rounded-lg bg-white px-3 py-1 text-amber-700" aria-label="Giảm số chuyến khách hủy">−</span></div></button>
-                <button type="button" onclick="updateCount('completed',1)" class="btn-touch text-left bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3"><span class="text-xs font-black text-emerald-700">Hoàn thành</span><div class="flex justify-between items-center mt-2"><span id="valCompleted" class="text-3xl font-black text-emerald-600">0</span><span onclick="event.stopPropagation();updateCount('completed',-1)" class="rounded-lg bg-white px-3 py-1 text-emerald-700" aria-label="Giảm số chuyến hoàn thành">−</span></div></button>
-            </div>
-            <p class="text-center text-[10px] text-slate-400 font-semibold">Chạm ô để cộng, nhấn dấu − để trừ</p>
-        </section>
 
-        <section id="tabContentBonus" class="space-y-4" hidden><div><h2 class="text-lg font-black text-slate-900">Thưởng & mục tiêu</h2><p class="text-xs text-slate-500">Theo dõi các chương trình thưởng của bạn.</p></div><form id="bonusForm" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3"><label class="block text-xs font-bold text-slate-600">Tên chương trình<input id="bonusName" required maxlength="60" class="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="Ví dụ: Thưởng 20 chuyến"></label><label class="block text-xs font-bold text-slate-600">Tiền thưởng (₫)<input id="bonusAmount" required type="number" min="0" step="1000" class="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="100000"></label><button class="w-full rounded-xl bg-amber-500 py-3 text-sm font-black text-white">Thêm chương trình</button></form><div id="bonusList" class="space-y-2"></div></section>
-        <section id="tabContentEarnings" class="space-y-4" hidden><div><h2 class="text-lg font-black text-slate-900">Thu nhập</h2><p class="text-xs text-slate-500">Ghi lại và xem tổng thu nhập theo ngày.</p></div><form id="earningsForm" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3"><label class="block text-xs font-bold text-slate-600">Thu nhập hôm nay (₫)<input id="earningsAmount" required type="number" min="0" step="1000" class="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="Nhập số tiền"></label><button class="w-full rounded-xl bg-emerald-500 py-3 text-sm font-black text-white">Lưu thu nhập hôm nay</button></form><div class="bg-white border border-slate-200 rounded-2xl p-4"><p class="text-xs font-bold text-slate-500">TỔNG THU NHẬP HÔM NAY</p><p id="todayEarnings" class="mt-1 text-2xl font-black text-emerald-600">0 ₫</p></div><div><h3 class="mb-2 text-sm font-black">Lịch sử thu nhập</h3><div id="earningsList" class="space-y-2"></div></div></section>
+            <div class="grid grid-cols-2 gap-2.5 shrink-0">
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500"><span>Hoàn thành</span><i class="fa-solid fa-circle-check text-emerald-500"></i></div>
+                    <div class="my-1.5 flex items-baseline justify-between"><span id="pctCompletion" class="text-xl font-black text-slate-900">100.00%</span><span id="rawCompletion" class="text-[10px] text-slate-400">100%</span></div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barCompletion" class="bg-emerald-500 h-full transition-all duration-300" style="width: 100%"></div></div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500"><span>Nhận chuyến</span><i class="fa-solid fa-hand-holding-hand text-blue-500"></i></div>
+                    <div class="my-1.5 flex items-baseline justify-between"><span id="pctAccept" class="text-xl font-black text-slate-900">100.00%</span><span id="rawAccept" class="text-[10px] text-slate-400">100%</span></div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barAccept" class="bg-blue-500 h-full transition-all duration-300" style="width: 100%"></div></div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500"><span>Tài xế hủy</span><i class="fa-solid fa-ban text-rose-500"></i></div>
+                    <div class="my-1.5 flex items-baseline justify-between"><span id="pctDriverCancel" class="text-xl font-black text-slate-900">0.00%</span><span id="rawDriverCancel" class="text-[10px] text-slate-400">0%</span></div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barDriverCancel" class="bg-rose-500 h-full transition-all duration-300" style="width: 0%"></div></div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500"><span>Khách hủy</span><i class="fa-solid fa-user-xmark text-amber-500"></i></div>
+                    <div class="my-1.5 flex items-baseline justify-between"><span id="pctCustomerCancel" class="text-xl font-black text-slate-900">0.00%</span><span id="rawCustomerCancel" class="text-[10px] text-slate-400">0%</span></div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barCustomerCancel" class="bg-amber-500 h-full transition-all duration-300" style="width: 0%"></div></div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm"><i class="fa-solid fa-tower-broadcast"></i></div>
+                    <div><span class="text-xs font-black text-slate-800 block">Tổng Phát Đến</span><span class="text-[10px] text-slate-400 font-semibold">Tự động = Trôi + Hoàn thành + Khách + Tài xế</span></div>
+                </div>
+                <div class="text-lg font-black text-slate-900 px-4 py-1.5 bg-white border border-slate-200 rounded-xl min-w-[60px] text-center shadow-xs" id="valIncoming">0</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 shrink-0">
+                <div onclick="updateCount('ignored', 1)" class="btn-touch relative bg-orange-50 border-2 border-orange-200 hover:border-orange-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-xs overflow-hidden">
+                    <button onclick="event.stopPropagation(); updateCount('ignored', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-orange-300 text-orange-600 flex items-center justify-center font-bold shadow-xs hover:bg-orange-100 active:scale-95">
+                        <i class="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <div class="flex justify-end items-center"><span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700">Trôi</span></div>
+                    <div class="my-2 text-center"><span class="text-3xl font-black text-orange-600 tracking-tight" id="valIgnored">0</span></div>
+                </div>
+                <div onclick="updateCount('driverCancel', 1)" class="btn-touch relative bg-rose-50 border-2 border-rose-200 hover:border-rose-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-xs overflow-hidden">
+                    <button onclick="event.stopPropagation(); updateCount('driverCancel', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-rose-300 text-rose-600 flex items-center justify-center font-bold shadow-xs hover:bg-rose-100 active:scale-95">
+                        <i class="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <div class="flex justify-end items-center"><span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700">Tài xế hủy</span></div>
+                    <div class="my-2 text-center"><span class="text-3xl font-black text-rose-600 tracking-tight" id="valDriverCancel">0</span></div>
+                </div>
+                <div onclick="updateCount('customerCancel', 1)" class="btn-touch relative bg-amber-50 border-2 border-amber-200 hover:border-amber-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-xs overflow-hidden">
+                    <button onclick="event.stopPropagation(); updateCount('customerCancel', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-amber-300 text-amber-600 flex items-center justify-center font-bold shadow-xs hover:bg-amber-100 active:scale-95">
+                        <i class="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <div class="flex justify-end items-center"><span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Khách hủy</span></div>
+                    <div class="my-2 text-center"><span class="text-3xl font-black text-amber-600 tracking-tight" id="valCustomerCancel">0</span></div>
+                </div>
+                <div onclick="updateCount('completed', 1)" class="btn-touch relative bg-emerald-50 border-2 border-emerald-200 hover:border-emerald-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-xs overflow-hidden">
+                    <button onclick="event.stopPropagation(); updateCount('completed', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-emerald-300 text-emerald-600 flex items-center justify-center font-bold shadow-xs hover:bg-emerald-100 active:scale-95">
+                        <i class="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <div class="flex justify-end items-center"><span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Hoàn thành</span></div>
+                    <div class="my-2 text-center"><span class="text-3xl font-black text-emerald-600 tracking-tight" id="valCompleted">0</span></div>
+                </div>
+            </div>
+
+            <div class="text-center text-[10px] text-slate-400 font-semibold pt-1">Chạm để cộng cuốc tương ứng</div>
+        </div>
+
+        <div id="tabContentBonus" class="hidden flex-1 flex flex-col min-h-0 space-y-3">
+            <div class="flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="text-sm font-black text-slate-900">Chương trình thưởng</h3>
+                    <p class="text-[11px] text-slate-500 font-medium">Theo dõi mốc thưởng & điều kiện tỉ lệ</p>
+                </div>
+                <button onclick="openAddBonusModal()" class="btn-touch px-3 py-2 rounded-xl bg-amber-500 text-white text-xs font-extrabold shadow-sm flex items-center gap-1">
+                    <i class="fa-solid fa-plus"></i> Thêm chương trình
+                </button>
+            </div>
+            <div id="bonusProgramsContainer" class="space-y-3 flex-1 overflow-y-auto"></div>
+        </div>
+
+        <div id="tabContentEarnings" class="hidden flex-1 flex flex-col min-h-0 space-y-3">
+            <div class="flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="text-sm font-black text-slate-900">Thu nhập & Chi phí</h3>
+                    <p class="text-[11px] text-slate-500 font-medium">Tự động lưu theo ngày - có tính tiền cơm, xăng xe</p>
+                </div>
+                <div class="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-[10px] font-black flex items-center gap-1">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tự động lưu
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-3 shadow-xs shrink-0">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <span class="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                        <i class="fa-regular fa-calendar-days text-emerald-600"></i> Ngày: <span id="earningsDateLabel">Hôm nay</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-bold">Chạm ô để nhập</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div onclick="setActiveEarningsField('revTrips')" id="cardRevTrips" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all">
+                        <span class="text-[10px] font-bold text-slate-500 block mb-1">Doanh thu cuốc xe</span>
+                        <div class="text-sm font-black text-emerald-600 truncate" id="valRevTrips">0đ</div>
+                    </div>
+                    <div onclick="setActiveEarningsField('revBonus')" id="cardRevBonus" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all">
+                        <span class="text-[10px] font-bold text-slate-500 block mb-1">Thưởng & Khác</span>
+                        <div class="text-sm font-black text-amber-600 truncate" id="valRevBonus">0đ</div>
+                    </div>
+                    <div onclick="setActiveEarningsField('expFuel')" id="cardExpFuel" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all">
+                        <span class="text-[10px] font-bold text-slate-500 block mb-1">Chi phí xăng xe</span>
+                        <div class="text-sm font-black text-rose-600 truncate" id="valExpFuel">0đ</div>
+                    </div>
+                    <div onclick="setActiveEarningsField('expMeal')" id="cardExpMeal" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all">
+                        <span class="text-[10px] font-bold text-slate-500 block mb-1">Tiền cơm / Nước</span>
+                        <div class="text-sm font-black text-rose-600 truncate" id="valExpMeal">0đ</div>
+                    </div>
+                </div>
+
+                <div onclick="setActiveEarningsField('expOther')" id="cardExpOther" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-500 block">Chi phí khác (Bảo dưỡng, gửi xe...)</span>
+                        <span class="text-xs font-black text-rose-600" id="valExpOther">0đ</span>
+                    </div>
+                    <i class="fa-solid fa-pen-to-square text-xs text-slate-400"></i>
+                </div>
+
+                <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-3 text-white flex items-center justify-between shadow-md">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-300 block">THU NHẬP RÒNG (LỢI NHUẬN)</span>
+                        <span class="text-lg font-black text-emerald-400" id="valNetEarnings">0đ</span>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-wallet text-sm"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs shrink-0">
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <span class="text-[10px] font-black text-slate-500 flex items-center gap-1">
+                        <i class="fa-regular fa-keyboard text-emerald-600"></i> Bàn phím nhập tiền cho: <strong id="activeFieldTitle" class="text-slate-900">Doanh thu cuốc xe</strong>
+                    </span>
+                    <button onclick="keypadClear()" class="text-[10px] font-extrabold text-rose-600 hover:underline">Xóa ô</button>
+                </div>
+                <div class="grid grid-cols-4 gap-1.5">
+                    <button onclick="keypadPress('1')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">1</button>
+                    <button onclick="keypadPress('2')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">2</button>
+                    <button onclick="keypadPress('3')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">3</button>
+                    <button onclick="keypadPress('000')" class="btn-touch py-2.5 bg-emerald-50 hover:bg-emerald-100 font-black text-emerald-700 rounded-xl text-xs shadow-xs border border-emerald-200">000</button>
+                    <button onclick="keypadPress('4')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">4</button>
+                    <button onclick="keypadPress('5')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">5</button>
+                    <button onclick="keypadPress('6')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">6</button>
+                    <button onclick="keypadPress('00')" class="btn-touch py-2.5 bg-emerald-50 hover:bg-emerald-100 font-black text-emerald-700 rounded-xl text-xs shadow-xs border border-emerald-200">00</button>
+                    <button onclick="keypadPress('7')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">7</button>
+                    <button onclick="keypadPress('8')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">8</button>
+                    <button onclick="keypadPress('9')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">9</button>
+                    <button onclick="keypadDelete()" class="btn-touch py-2.5 bg-rose-50 hover:bg-rose-100 font-black text-rose-700 rounded-xl text-xs shadow-xs border border-rose-200 flex items-center justify-center"><i class="fa-solid fa-delete-left"></i></button>
+                    <button onclick="keypadPress('0')" class="col-span-3 btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">0</button>
+                    <button onclick="keypadNextField()" class="btn-touch py-2.5 bg-emerald-600 hover:bg-emerald-700 font-black text-white rounded-xl text-xs shadow-xs flex items-center justify-center gap-1"><i class="fa-solid fa-arrow-down"></i> Tiếp</button>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <nav aria-label="Điều hướng chính" class="bg-white border-t border-slate-200 px-5 py-2.5 flex justify-around fixed bottom-0 left-0 right-0 max-w-md mx-auto shadow-lg">
-        <button type="button" data-tab="rate" id="navTabRate" aria-current="page" class="btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]"><i class="fa-solid fa-chart-pie text-base"></i><span>Tỉ lệ</span></button>
-        <button type="button" data-tab="bonus" id="navTabBonus" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]"><i class="fa-solid fa-gift text-base"></i><span>Thưởng</span></button>
-        <button type="button" data-tab="earnings" id="navTabEarnings" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]"><i class="fa-solid fa-wallet text-base"></i><span>Thu nhập</span></button>
+    <nav class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-around shrink-0 shadow-lg z-40 fixed bottom-0 left-0 right-0 max-w-md mx-auto">
+        <button onclick="switchTab('rate')" id="navTabRate" class="btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]">
+            <i class="fa-solid fa-chart-pie text-base"></i>
+            <span>Tỉ lệ</span>
+        </button>
+        <button onclick="switchTab('bonus')" id="navTabBonus" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]">
+            <i class="fa-solid fa-gift text-base"></i>
+            <span>Thưởng</span>
+        </button>
+        <button onclick="switchTab('earnings')" id="navTabEarnings" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]">
+            <i class="fa-solid fa-wallet text-base"></i>
+            <span>Thu nhập</span>
+        </button>
     </nav>
 
+    <div id="historyModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 w-full max-w-sm shadow-2xl my-auto max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between mb-3 shrink-0">
+                <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Lịch sử các ngày trước
+                </h3>
+                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-700 p-1">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <div id="historyLogsContainer" class="space-y-3 text-xs text-slate-700 font-medium overflow-y-auto flex-1 pr-1"></div>
+            <div class="mt-4 pt-3 border-t border-slate-100 shrink-0">
+                <button onclick="closeHistoryModal()" class="btn-touch w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bonusModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 w-full max-w-sm shadow-2xl my-auto max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between mb-3 shrink-0">
+                <h3 id="bonusModalTitle" class="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-gift text-amber-500"></i> Tạo chương trình thưởng
+                </h3>
+                <button onclick="closeAddBonusModal()" class="text-slate-400 hover:text-slate-700 p-1">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs text-slate-700 font-medium overflow-y-auto flex-1 pr-1">
+                <div>
+                    <label class="font-extrabold text-slate-600 block mb-1">Tên chương trình:</label>
+                    <input type="text" id="inputBonusTitle" value="beBike - Thưởng Cuối Tuần" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="font-extrabold text-slate-600 block mb-1">Loại thưởng:</label>
+                        <select id="inputBonusType" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold focus:outline-none focus:border-amber-500">
+                            <option value="Thưởng ngày">Thưởng ngày</option>
+                            <option value="Thưởng tuần">Thưởng tuần</option>
+                            <option value="Thưởng sự kiện">Thưởng sự kiện</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="font-extrabold text-slate-600 block mb-1">Nhận tối thiểu (%):</label>
+                        <input type="number" id="inputReqAccept" value="90" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold text-center">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="font-extrabold text-slate-600 block mb-1">Hủy tối đa (%):</label>
+                    <input type="number" id="inputReqCancel" value="10" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold text-center">
+                </div>
+
+                <div class="border-t border-slate-200 pt-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="font-extrabold text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-trophy text-amber-500"></i> Danh sách mốc thưởng
+                        </label>
+                        <button type="button" onclick="addMilestoneRow()" class="px-2.5 py-1 bg-amber-50 border border-amber-300 text-amber-700 rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-xs">
+                            <i class="fa-solid fa-plus text-[10px]"></i> Thêm mốc
+                        </button>
+                    </div>
+                    <div id="milestonesInputsContainer" class="space-y-2 mt-1"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 mt-4 pt-3 border-t border-slate-100 shrink-0">
+                <button onclick="closeAddBonusModal()" class="btn-touch py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">Hủy</button>
+                <button onclick="saveBonusProgram()" id="bonusModalSaveBtn" class="btn-touch py-2.5 rounded-xl bg-amber-500 text-white font-extrabold text-xs shadow-md">Tạo chương trình</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.error('PWA: register service worker failed', error)));
-        const STORAGE_KEY = 'driver_app_state_v3';
-        const state = { ignored: 0, completed: 0, customerCancel: 0, driverCancel: 0, roundingEnabled: true, isShiftActive: false, shiftStartTime: null, elapsedSeconds: 0, bonusPrograms: [], dailyEarnings: {} };
-        let timerInterval = null, toastTimeout = null;
+        const state = {
+            lastDate: new Date().toDateString(),
+            ignored: 0,
+            completed: 0,
+            customerCancel: 0,
+            driverCancel: 0,
+            roundingEnabled: true,
+            historyLogs: [],
+            dailyEarnings: {},
+            bonusPrograms: [],
+            isShiftActive: false,
+            shiftStartTime: null,
+            elapsedSeconds: 0
+        };
+
+        let timerInterval = null;
+        let toastTimeout = null;
+        let activeEarningsFieldKey = 'revTrips';
+        let editingBonusId = null;
+
+        const earningsFieldLabels = {
+            revTrips: 'Doanh thu cuốc xe',
+            revBonus: 'Thưởng & Khác',
+            expFuel: 'Chi phí xăng xe',
+            expMeal: 'Tiền cơm / Nước',
+            expOther: 'Chi phí khác'
+        };
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg;
+            t.style.opacity = '1';
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                t.style.opacity = '0';
+            }, 2000);
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('driver_app_state_v3', JSON.stringify(state));
+            } catch (error) {
+                console.warn('Không thể lưu state', error);
+            }
+        }
+
         function loadState() {
-            try { Object.assign(state, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); } catch (error) { console.warn('Không thể đọc dữ liệu đã lưu', error); }
-            ['ignored','completed','customerCancel','driverCancel','elapsedSeconds'].forEach(key => { const value = Number(state[key]); state[key] = Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0; });
+            const saved = localStorage.getItem('driver_app_state_v3');
+            if (saved) {
+                try {
+                    Object.assign(state, JSON.parse(saved));
+                } catch (error) {
+                    console.warn('Invalid saved state', error);
+                }
+            }
+
+            if (!Array.isArray(state.historyLogs)) state.historyLogs = [];
             if (!Array.isArray(state.bonusPrograms)) state.bonusPrograms = [];
             if (!state.dailyEarnings || typeof state.dailyEarnings !== 'object') state.dailyEarnings = {};
+
+            const currentDate = new Date().toDateString();
+            if (!state.lastDate) state.lastDate = currentDate;
+            else if (state.lastDate !== currentDate) {
+                const oldLog = {
+                    date: state.lastDate,
+                    ignored: state.ignored,
+                    completed: state.completed,
+                    customerCancel: state.customerCancel,
+                    driverCancel: state.driverCancel,
+                    earnings: state.dailyEarnings[state.lastDate] || {
+                        revTrips: 0, revBonus: 0, expFuel: 0, expMeal: 0, expOther: 0
+                    }
+                };
+                state.historyLogs.unshift(oldLog);
+                state.ignored = 0;
+                state.completed = 0;
+                state.customerCancel = 0;
+                state.driverCancel = 0;
+                state.isShiftActive = false;
+                state.shiftStartTime = null;
+                state.elapsedSeconds = 0;
+                state.lastDate = currentDate;
+                saveState();
+            }
+
+            if (state.isShiftActive && state.shiftStartTime) {
+                const diff = Math.floor((Date.now() - state.shiftStartTime) / 1000);
+                state.elapsedSeconds = (state.elapsedSeconds || 0) + diff;
+                state.shiftStartTime = Date.now();
+            }
         }
-        function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { showToast('Không lưu được dữ liệu trên thiết bị'); } }
-        function showToast(message) { const toast = document.getElementById('toast'); toast.textContent = message; toast.classList.remove('opacity-0'); toast.classList.add('opacity-100'); clearTimeout(toastTimeout); toastTimeout = setTimeout(() => { toast.classList.add('opacity-0'); toast.classList.remove('opacity-100'); }, 2200); }
-        function toggleRounding() { state.roundingEnabled = !state.roundingEnabled; saveState(); render(); showToast(state.roundingEnabled ? 'Đã bật làm tròn lên' : 'Đã tắt làm tròn'); }
-        function resetCounts() { if (!window.confirm('Đặt lại toàn bộ số cuốc?')) return; state.ignored = state.completed = state.customerCancel = state.driverCancel = 0; saveState(); render(); showToast('Đã đặt lại số cuốc'); }
-        function updateCount(type, delta) { if (!['ignored','completed','customerCancel','driverCancel'].includes(type)) return; if (delta < 0 && state[type] <= 0) { showToast('Số lượng đã bằng 0'); return; } state[type] = Math.max(0, state[type] + delta); saveState(); render(); }
-        function setRate(id, rawId, barId, value) { const bounded = Math.min(100, Math.max(0, value)); document.getElementById(rawId).textContent = value.toFixed(1) + '%'; document.getElementById(id).textContent = (state.roundingEnabled ? Math.ceil(value) : value.toFixed(2)) + '%'; document.getElementById(barId).style.width = bounded + '%'; }
+
+        function resetAll() {
+            if (!window.confirm('Bạn có chắc muốn đặt lại toàn bộ?')) return;
+            state.ignored = 0;
+            state.completed = 0;
+            state.customerCancel = 0;
+            state.driverCancel = 0;
+            saveState();
+            render();
+            showToast('Đã đặt lại toàn bộ');
+        }
+
+        function updateCount(type, delta) {
+            if (!['ignored', 'completed', 'customerCancel', 'driverCancel'].includes(type)) return;
+            if (delta < 0 && state[type] <= 0) {
+                showToast('Số lượng đã bằng 0!');
+                return;
+            }
+            state[type] += delta;
+            saveState();
+            render();
+        }
+
         function render() {
-            const incoming = state.ignored + state.completed + state.customerCancel + state.driverCancel, completionBase = incoming - state.customerCancel, accepted = incoming - state.ignored;
-            document.getElementById('valIncoming').textContent = incoming; document.getElementById('valIgnored').textContent = state.ignored; document.getElementById('valCompleted').textContent = state.completed; document.getElementById('valCustomerCancel').textContent = state.customerCancel; document.getElementById('valDriverCancel').textContent = state.driverCancel;
-            setRate('pctCompletion','rawCompletion','barCompletion',completionBase > 0 ? Math.min(100,state.completed / completionBase * 100) : 100); setRate('pctAccept','rawAccept','barAccept',incoming > 0 ? accepted / incoming * 100 : 100); setRate('pctDriverCancel','rawDriverCancel','barDriverCancel',accepted > 0 ? state.driverCancel / accepted * 100 : 0); setRate('pctCustomerCancel','rawCustomerCancel','barCustomerCancel',incoming > 0 ? state.customerCancel / incoming * 100 : 0);
-            const rounding = document.getElementById('roundingBtn'); rounding.textContent = 'Làm tròn: ' + (state.roundingEnabled ? 'Bật' : 'Tắt'); rounding.className = 'px-2 py-2 rounded-xl border text-[10px] font-extrabold ' + (state.roundingEnabled ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-100 text-slate-600 border-slate-300');
-            renderTimer(); renderBonuses(); renderEarnings();
+            const incoming = state.ignored + state.completed + state.customerCancel + state.driverCancel;
+            document.getElementById('valIncoming').textContent = incoming;
+            document.getElementById('valIgnored').textContent = state.ignored;
+            document.getElementById('valCompleted').textContent = state.completed;
+            document.getElementById('valCustomerCancel').textContent = state.customerCancel;
+            document.getElementById('valDriverCancel').textContent = state.driverCancel;
+
+            const denomCompletion = incoming - state.customerCancel;
+            let rawCompletionVal = denomCompletion > 0 ? (state.completed / denomCompletion) * 100 : 100;
+            if (rawCompletionVal > 100) rawCompletionVal = 100;
+
+            let rawAcceptVal = incoming > 0 ? ((incoming - state.ignored) / incoming) * 100 : 100;
+            const totalAccepted = incoming - state.ignored;
+            let rawDriverCancelVal = totalAccepted > 0 ? (state.driverCancel / totalAccepted) * 100 : 0;
+            let rawCustomerCancelVal = incoming > 0 ? (state.customerCancel / incoming) * 100 : 0;
+
+            document.getElementById('rawCompletion').textContent = rawCompletionVal.toFixed(1) + '%';
+            document.getElementById('rawAccept').textContent = rawAcceptVal.toFixed(1) + '%';
+            document.getElementById('rawDriverCancel').textContent = rawDriverCancelVal.toFixed(1) + '%';
+            document.getElementById('rawCustomerCancel').textContent = rawCustomerCancelVal.toFixed(1) + '%';
+
+            document.getElementById('pctCompletion').textContent = state.roundingEnabled ? Math.ceil(rawCompletionVal) + '%' : rawCompletionVal.toFixed(2) + '%';
+            document.getElementById('pctAccept').textContent = state.roundingEnabled ? Math.ceil(rawAcceptVal) + '%' : rawAcceptVal.toFixed(2) + '%';
+            document.getElementById('pctDriverCancel').textContent = state.roundingEnabled ? Math.ceil(rawDriverCancelVal) + '%' : rawDriverCancelVal.toFixed(2) + '%';
+            document.getElementById('pctCustomerCancel').textContent = state.roundingEnabled ? Math.ceil(rawCustomerCancelVal) + '%' : rawCustomerCancelVal.toFixed(2) + '%';
+
+            document.getElementById('barCompletion').style.width = rawCompletionVal + '%';
+            document.getElementById('barAccept').style.width = rawAcceptVal + '%';
+            document.getElementById('barDriverCancel').style.width = rawDriverCancelVal + '%';
+            document.getElementById('barCustomerCancel').style.width = rawCustomerCancelVal + '%';
+
+            const btnR = document.getElementById('roundingBtn');
+            const txtR = document.getElementById('roundingText');
+            if (state.roundingEnabled) {
+                btnR.className = 'px-2.5 py-1.5 rounded-xl border text-[11px] font-extrabold flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border-emerald-300 shadow-xs';
+                txtR.textContent = 'Làm tròn: Bật';
+            } else {
+                btnR.className = 'px-2.5 py-1.5 rounded-xl border text-[11px] font-extrabold flex items-center gap-1.5 bg-slate-100 text-slate-600 border-slate-300 shadow-xs';
+                txtR.textContent = 'Làm tròn: Tắt';
+            }
+
+            renderTimer();
+            renderBonusPrograms();
+            renderEarningsView();
         }
+
         function switchTab(tab) {
-            const tabs = ['rate','bonus','earnings']; if (!tabs.includes(tab)) return;
-            tabs.forEach(name => { const section = document.getElementById('tabContent' + name[0].toUpperCase() + name.slice(1)); const button = document.getElementById('navTab' + name[0].toUpperCase() + name.slice(1)); section.hidden = name !== tab; button.className = 'btn-touch flex flex-col items-center gap-1 font-extrabold text-[11px] ' + (name === tab ? (name === 'bonus' ? 'text-amber-600' : 'text-emerald-600') : 'text-slate-400'); if (name === tab) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current'); });
-            document.querySelector('main').scrollTop = 0;
+            const tabRate = document.getElementById('tabContentRate');
+            const tabBonus = document.getElementById('tabContentBonus');
+            const tabEarnings = document.getElementById('tabContentEarnings');
+            const navRate = document.getElementById('navTabRate');
+            const navBonus = document.getElementById('navTabBonus');
+            const navEarnings = document.getElementById('navTabEarnings');
+
+            tabRate.classList.add('hidden');
+            tabBonus.classList.add('hidden');
+            tabEarnings.classList.add('hidden');
+
+            navRate.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
+            navBonus.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
+            navEarnings.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
+
+            if (tab === 'rate') {
+                tabRate.classList.remove('hidden');
+                navRate.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
+            } else if (tab === 'bonus') {
+                tabBonus.classList.remove('hidden');
+                navBonus.className = 'btn-touch flex flex-col items-center gap-1 text-amber-600 font-extrabold text-[11px]';
+                renderBonusPrograms();
+            } else if (tab === 'earnings') {
+                tabEarnings.classList.remove('hidden');
+                navEarnings.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
+                renderEarningsView();
+            }
         }
-        document.querySelector('nav[aria-label="Điều hướng chính"]').addEventListener('click', event => { const button = event.target.closest('button[data-tab]'); if (button) { event.preventDefault(); switchTab(button.dataset.tab); } });
-        function currentElapsedSeconds() { return Math.max(0,Number(state.elapsedSeconds) || 0) + (state.isShiftActive && state.shiftStartTime ? Math.floor((Date.now() - state.shiftStartTime) / 1000) : 0); }
-        function renderTimer() { const total = Math.floor(currentElapsedSeconds()), h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60; document.getElementById('timerDisplay').textContent = [h,m,s].map(value => String(value).padStart(2,'0')).join(':'); document.getElementById('timerBtnText').textContent = state.isShiftActive ? 'Dừng ca' : 'Bắt đầu ca'; document.getElementById('timerBtnIcon').className = state.isShiftActive ? 'fa-solid fa-pause' : 'fa-solid fa-play'; document.getElementById('timerToggleBtn').className = 'btn-touch px-3 py-2 rounded-xl text-white text-xs font-black flex items-center gap-2 ' + (state.isShiftActive ? 'bg-rose-500' : 'bg-emerald-500'); document.getElementById('timerIconBg').className = 'w-9 h-9 rounded-xl flex items-center justify-center ' + (state.isShiftActive ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'); }
-        function toggleShiftTimer() { if (state.isShiftActive) { state.elapsedSeconds = currentElapsedSeconds(); state.isShiftActive = false; state.shiftStartTime = null; clearInterval(timerInterval); timerInterval = null; showToast('Đã dừng thời gian chạy'); } else { state.isShiftActive = true; state.shiftStartTime = Date.now(); clearInterval(timerInterval); timerInterval = setInterval(renderTimer,500); showToast('Đã bắt đầu tính thời gian chạy'); } saveState(); renderTimer(); }
-        function resetShiftTimer() { if (!window.confirm('Bạn có chắc muốn đặt lại thời gian chạy về 00:00:00?')) return; clearInterval(timerInterval); timerInterval = null; state.isShiftActive = false; state.shiftStartTime = null; state.elapsedSeconds = 0; saveState(); renderTimer(); showToast('Đã đặt lại thời gian chạy'); }
-        function formatMoney(amount) { return new Intl.NumberFormat('vi-VN').format(Number(amount) || 0) + ' ₫'; }
-        function escapeHTML(value) { return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
-        function renderBonuses() { const list = document.getElementById('bonusList'); if (!state.bonusPrograms.length) { list.innerHTML = '<p class="rounded-xl bg-white p-4 text-center text-xs text-slate-400">Chưa có chương trình thưởng nào.</p>'; return; } list.innerHTML = state.bonusPrograms.map((item,index) => `<div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3"><div><p class="text-sm font-bold">${escapeHTML(item.name)}</p><p class="text-xs text-amber-600 font-bold">${formatMoney(item.amount)}</p></div><button type="button" onclick="deleteBonus(${index})" class="px-3 py-2 text-rose-500" aria-label="Xóa chương trình thưởng"><i class="fa-solid fa-trash"></i></button></div>`).join(''); }
-        function deleteBonus(index) { state.bonusPrograms.splice(index,1); saveState(); renderBonuses(); showToast('Đã xóa chương trình thưởng'); }
-        function dateKey() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`; }
-        function renderEarnings() { const today = dateKey(); document.getElementById('todayEarnings').textContent = formatMoney(state.dailyEarnings[today] || 0); const entries = Object.entries(state.dailyEarnings).filter(([,amount]) => Number(amount) > 0).sort(([a],[b]) => b.localeCompare(a)); document.getElementById('earningsList').innerHTML = entries.length ? entries.map(([date,amount]) => `<div class="flex justify-between rounded-xl border border-slate-200 bg-white p-3 text-sm"><span>${new Date(date+'T00:00:00').toLocaleDateString('vi-VN')}</span><b>${formatMoney(amount)}</b></div>`).join('') : '<p class="rounded-xl bg-white p-4 text-center text-xs text-slate-400">Chưa có dữ liệu thu nhập.</p>'; }
-        document.getElementById('bonusForm').addEventListener('submit', event => { event.preventDefault(); const name = document.getElementById('bonusName').value.trim(), amount = Number(document.getElementById('bonusAmount').value); if (!name || !Number.isFinite(amount) || amount < 0) return; state.bonusPrograms.unshift({name,amount}); saveState(); renderBonuses(); event.target.reset(); showToast('Đã thêm chương trình thưởng'); });
-        document.getElementById('earningsForm').addEventListener('submit', event => { event.preventDefault(); const amount = Number(document.getElementById('earningsAmount').value); if (!Number.isFinite(amount) || amount < 0) return; state.dailyEarnings[dateKey()] = amount; saveState(); renderEarnings(); showToast('Đã lưu thu nhập hôm nay'); });
+
+        function toggleShiftTimer() {
+            state.isShiftActive = !state.isShiftActive;
+            if (state.isShiftActive) {
+                state.shiftStartTime = Date.now();
+                startTimerInterval();
+                showToast('Đã bắt đầu tính thời gian chạy!');
+            } else {
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+                state.shiftStartTime = null;
+                showToast('Đã tạm dừng thời gian chạy!');
+            }
+            saveState();
+            updateTimerUI();
+        }
+
+        function startTimerInterval() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!state.isShiftActive || !state.shiftStartTime) return;
+                state.elapsedSeconds = (state.elapsedSeconds || 0) + 1;
+                saveState();
+                updateTimerUI();
+            }, 1000);
+        }
+
+        function resetShiftTimer() {
+            if (!window.confirm('Bạn có chắc muốn đặt lại thời gian chạy về 00:00:00?')) return;
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            state.isShiftActive = false;
+            state.shiftStartTime = null;
+            state.elapsedSeconds = 0;
+            saveState();
+            updateTimerUI();
+            showToast('Đã đặt lại thời gian chạy');
+        }
+
+        function updateTimerUI() {
+            const secTotal = Math.max(0, state.elapsedSeconds || 0);
+            const h = Math.floor(secTotal / 3600);
+            const m = Math.floor((secTotal % 3600) / 60);
+            const s = secTotal % 60;
+            const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            const dispEl = document.getElementById('timerDisplay');
+            if (dispEl) dispEl.textContent = timeStr;
+
+            const btn = document.getElementById('timerToggleBtn');
+            const btnIcon = document.getElementById('timerBtnIcon');
+            const btnText = document.getElementById('timerBtnText');
+            const iconBg = document.getElementById('timerIconBg');
+            if (state.isShiftActive) {
+                if (btn) btn.className = 'btn-touch px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all';
+                if (btnIcon) btnIcon.className = 'fa-solid fa-pause text-xs';
+                if (btnText) btnText.textContent = 'Dừng ca';
+                if (iconBg) iconBg.className = 'w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm shadow-xs transition-all animate-pulse';
+            } else {
+                if (btn) btn.className = 'btn-touch px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all';
+                if (btnIcon) btnIcon.className = 'fa-solid fa-play text-xs';
+                if (btnText) btnText.textContent = 'Bắt đầu ca';
+                if (iconBg) iconBg.className = 'w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shadow-xs transition-all';
+            }
+        }
+
+        function renderTimer() {
+            updateTimerUI();
+        }
+
+        function openHistoryModal() {
+            const container = document.getElementById('historyLogsContainer');
+            if (!state.historyLogs || state.historyLogs.length === 0) {
+                container.innerHTML = '<div class="rounded-xl bg-slate-50 border border-slate-200 p-3 text-center text-slate-500">Chưa có lịch sử ngày nào.</div>';
+            } else {
+                container.innerHTML = state.historyLogs.map(log => `
+                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
+                        <div class="font-black text-slate-800 mb-1">${log.date}</div>
+                        <div class="space-y-1 text-[11px] text-slate-600">
+                            <div>Trôi: ${log.ignored}</div>
+                            <div>Hoàn thành: ${log.completed}</div>
+                            <div>Tài xế hủy: ${log.driverCancel}</div>
+                            <div>Khách hủy: ${log.customerCancel}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('historyModal').classList.remove('hidden');
+            document.getElementById('historyModal').classList.add('flex');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.add('hidden');
+            document.getElementById('historyModal').classList.remove('flex');
+        }
+
+        function openAddBonusModal() {
+            editingBonusId = null;
+            document.getElementById('bonusModalTitle').textContent = 'Tạo chương trình thưởng';
+            document.getElementById('bonusModalSaveBtn').textContent = 'Tạo chương trình';
+            document.getElementById('inputBonusTitle').value = 'beBike - Thưởng Cuối Tuần';
+            document.getElementById('inputBonusType').value = 'Thưởng tuần';
+            document.getElementById('inputReqAccept').value = 90;
+            document.getElementById('inputReqCancel').value = 10;
+            document.getElementById('milestonesInputsContainer').innerHTML = '';
+            addMilestoneRow();
+            document.getElementById('bonusModal').classList.remove('hidden');
+            document.getElementById('bonusModal').classList.add('flex');
+        }
+
+        function closeAddBonusModal() {
+            document.getElementById('bonusModal').classList.add('hidden');
+            document.getElementById('bonusModal').classList.remove('flex');
+        }
+
+        function addMilestoneRow() {
+            const container = document.getElementById('milestonesInputsContainer');
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-[1fr_1.2fr] gap-2';
+            row.innerHTML = `
+                <input type="number" min="1" step="1" value="" placeholder="Số cuốc" class="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold text-center">
+                <input type="text" value="" placeholder="Mô tả thưởng" class="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold">
+            `;
+            container.appendChild(row);
+        }
+
+        function renderBonusPrograms() {
+            const container = document.getElementById('bonusProgramsContainer');
+            if (!state.bonusPrograms || state.bonusPrograms.length === 0) {
+                container.innerHTML = '<div class="rounded-2xl bg-white border border-slate-200 p-4 text-center text-xs text-slate-500">Chưa có chương trình thưởng nào.</div>';
+                return;
+            }
+
+            container.innerHTML = state.bonusPrograms.map((program, index) => `
+                <div class="rounded-2xl bg-white border border-slate-200 p-3 shadow-xs">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <div class="text-sm font-black text-slate-900">${program.title}</div>
+                            <div class="text-[10px] text-amber-600 font-bold">${program.type}</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openEditBonusModal(${index})" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteBonusProgram(${index})" class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2 text-[10px] text-slate-600">
+                        <div class="rounded-lg bg-slate-50 px-2 py-1.5">Nhận tối thiểu: <b>${program.reqAccept}%</b></div>
+                        <div class="rounded-lg bg-slate-50 px-2 py-1.5">Hủy tối đa: <b>${program.reqCancel}%</b></div>
+                    </div>
+                    <div class="mt-3 space-y-1.5">
+                        ${(program.milestones || []).map((m) => `
+                            <div class="flex items-center justify-between rounded-lg bg-amber-50 border border-amber-200 px-2 py-1.5 text-[10px] text-amber-700 font-bold">
+                                <span>${m.count} cuốc</span>
+                                <span>${m.reward}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openEditBonusModal(index) {
+            const program = state.bonusPrograms[index];
+            if (!program) return;
+            editingBonusId = index;
+            document.getElementById('bonusModalTitle').textContent = 'Chỉnh sửa chương trình thưởng';
+            document.getElementById('bonusModalSaveBtn').textContent = 'Lưu thay đổi';
+            document.getElementById('inputBonusTitle').value = program.title;
+            document.getElementById('inputBonusType').value = program.type;
+            document.getElementById('inputReqAccept').value = program.reqAccept;
+            document.getElementById('inputReqCancel').value = program.reqCancel;
+            const container = document.getElementById('milestonesInputsContainer');
+            container.innerHTML = '';
+            (program.milestones || []).forEach((m) => {
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-[1fr_1.2fr] gap-2';
+                row.innerHTML = `
+                    <input type="number" min="1" step="1" value="${m.count}" placeholder="Số cuốc" class="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold text-center">
+                    <input type="text" value="${m.reward}" placeholder="Mô tả thưởng" class="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold">
+                `;
+                container.appendChild(row);
+            });
+            if (!program.milestones || program.milestones.length === 0) addMilestoneRow();
+            document.getElementById('bonusModal').classList.remove('hidden');
+            document.getElementById('bonusModal').classList.add('flex');
+        }
+
+        function deleteBonusProgram(index) {
+            state.bonusPrograms.splice(index, 1);
+            saveState();
+            renderBonusPrograms();
+            showToast('Đã xóa chương trình thưởng');
+        }
+
+        function saveBonusProgram() {
+            const title = document.getElementById('inputBonusTitle').value.trim();
+            const type = document.getElementById('inputBonusType').value;
+            const reqAccept = Number(document.getElementById('inputReqAccept').value || 0);
+            const reqCancel = Number(document.getElementById('inputReqCancel').value || 0);
+            const rows = [...document.querySelectorAll('#milestonesInputsContainer > div')];
+            const milestones = rows.map((row) => {
+                const inputs = row.querySelectorAll('input');
+                const count = Number(inputs[0]?.value || 0);
+                const reward = (inputs[1]?.value || '').trim();
+                if (!count || !reward) return null;
+                return { count, reward };
+            }).filter(Boolean);
+
+            if (!title) {
+                showToast('Vui lòng nhập tên chương trình');
+                return;
+            }
+            if (!milestones.length) {
+                showToast('Vui lòng thêm ít nhất 1 mốc thưởng');
+                return;
+            }
+
+            const program = { title, type, reqAccept, reqCancel, milestones };
+            if (editingBonusId !== null) {
+                state.bonusPrograms[editingBonusId] = program;
+            } else {
+                state.bonusPrograms.push(program);
+            }
+            saveState();
+            renderBonusPrograms();
+            closeAddBonusModal();
+            showToast(editingBonusId !== null ? 'Đã cập nhật chương trình' : 'Đã tạo chương trình thưởng');
+        }
+
+        function getTodayEarningsRecord() {
+            const dateKey = state.lastDate || new Date().toDateString();
+            if (!state.dailyEarnings[dateKey]) {
+                state.dailyEarnings[dateKey] = { revTrips: 0, revBonus: 0, expFuel: 0, expMeal: 0, expOther: 0 };
+            }
+            return state.dailyEarnings[dateKey];
+        }
+
+        function setActiveEarningsField(key) {
+            activeEarningsFieldKey = key;
+            document.getElementById('activeFieldTitle').textContent = earningsFieldLabels[key];
+            ['revTrips', 'revBonus', 'expFuel', 'expMeal', 'expOther'].forEach((k) => {
+                const el = document.getElementById('card' + k.charAt(0).toUpperCase() + k.slice(1));
+                if (!el) return;
+                if (k === key) {
+                    el.className = 'p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/50 cursor-pointer transition-all shadow-xs';
+                } else {
+                    el.className = 'p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all';
+                }
+            });
+        }
+
+        function keypadPress(val) {
+            const rec = getTodayEarningsRecord();
+            let currentValStr = String(rec[activeEarningsFieldKey] || 0);
+            if (currentValStr === '0') {
+                currentValStr = val;
+            } else {
+                currentValStr += val;
+            }
+            rec[activeEarningsFieldKey] = parseInt(currentValStr) || 0;
+            saveState();
+            renderEarningsView();
+        }
+
+        function keypadDelete() {
+            const rec = getTodayEarningsRecord();
+            let currentValStr = String(rec[activeEarningsFieldKey] || 0);
+            if (currentValStr.length <= 1) {
+                rec[activeEarningsFieldKey] = 0;
+            } else {
+                currentValStr = currentValStr.slice(0, -1);
+                rec[activeEarningsFieldKey] = parseInt(currentValStr) || 0;
+            }
+            saveState();
+            renderEarningsView();
+        }
+
+        function keypadClear() {
+            const rec = getTodayEarningsRecord();
+            rec[activeEarningsFieldKey] = 0;
+            saveState();
+            renderEarningsView();
+        }
+
+        function keypadNextField() {
+            const fields = ['revTrips', 'revBonus', 'expFuel', 'expMeal', 'expOther'];
+            const idx = fields.indexOf(activeEarningsFieldKey);
+            setActiveEarningsField(fields[(idx + 1) % fields.length]);
+        }
+
+        function renderEarningsView() {
+            const rec = getTodayEarningsRecord();
+            document.getElementById('earningsDateLabel').textContent = state.lastDate || 'Hôm nay';
+            document.getElementById('valRevTrips').textContent = (rec.revTrips || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('valRevBonus').textContent = (rec.revBonus || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('valExpFuel').textContent = (rec.expFuel || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('valExpMeal').textContent = (rec.expMeal || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('valExpOther').textContent = (rec.expOther || 0).toLocaleString('vi-VN') + 'đ';
+
+            const net = (rec.revTrips || 0) + (rec.revBonus || 0) - (rec.expFuel || 0) - (rec.expMeal || 0) - (rec.expOther || 0);
+            document.getElementById('valNetEarnings').textContent = net.toLocaleString('vi-VN') + 'đ';
+            document.getElementById('activeFieldTitle').textContent = earningsFieldLabels[activeEarningsFieldKey];
+        }
+
+        function toggleRounding() {
+            state.roundingEnabled = !state.roundingEnabled;
+            saveState();
+            render();
+            showToast(state.roundingEnabled ? 'Đã bật làm tròn trần' : 'Đã tắt làm tròn trần');
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch((error) => {
+                    console.error('PWA: register service worker failed', error);
+                });
+            });
+        }
+
         loadState();
-        if (state.isShiftActive) { if (!Number.isFinite(Number(state.shiftStartTime))) { state.isShiftActive = false; state.shiftStartTime = null; } else timerInterval = setInterval(renderTimer,500); }
-        render(); switchTab('rate');
+        setActiveEarningsField('revTrips');
+        render();
+        switchTab('rate');
     </script>
 </body>
 </html>
