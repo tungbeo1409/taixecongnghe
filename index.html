@@ -15,6 +15,9 @@
         body { font-family: 'Inter', sans-serif; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
         .btn-touch { transition: transform .08s ease, background-color .15s ease; }
         .btn-touch:active { transform: scale(.94); }
+        [hidden] { display: none !important; }
+        nav[aria-label="Điều hướng chính"] { z-index: 100; pointer-events: auto; }
+        nav[aria-label="Điều hướng chính"] button { position: relative; z-index: 101; pointer-events: auto; cursor: pointer; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-full flex flex-col max-w-md mx-auto relative">
@@ -34,23 +37,15 @@
     <main class="flex-1 overflow-y-auto p-4 pb-24">
         <section id="tabContentRate" class="space-y-3">
             <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                    <div id="timerIconBg" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-stopwatch"></i></div>
-                    <div><span class="text-[10px] font-bold text-slate-400 block uppercase">Thời gian chạy</span><span id="timerDisplay" class="text-base font-black text-slate-900">00:00:00</span></div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="resetShiftTimer()" id="timerResetBtn" class="btn-touch w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-600" title="Đặt lại thời gian về 00:00:00" aria-label="Đặt lại thời gian chạy"><i class="fa-solid fa-rotate-left"></i></button>
-                    <button type="button" onclick="toggleShiftTimer()" id="timerToggleBtn" class="btn-touch px-3 py-2 rounded-xl bg-emerald-500 text-white text-xs font-black flex items-center gap-2"><i id="timerBtnIcon" class="fa-solid fa-play"></i><span id="timerBtnText">Bắt đầu ca</span></button>
-                </div>
+                <div class="flex items-center gap-2.5"><div id="timerIconBg" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-stopwatch"></i></div><div><span class="text-[10px] font-bold text-slate-400 block uppercase">Thời gian chạy</span><span id="timerDisplay" class="text-base font-black text-slate-900">00:00:00</span></div></div>
+                <div class="flex items-center gap-2"><button type="button" onclick="resetShiftTimer()" id="timerResetBtn" class="btn-touch w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-600" title="Đặt lại thời gian về 00:00:00" aria-label="Đặt lại thời gian chạy"><i class="fa-solid fa-rotate-left"></i></button><button type="button" onclick="toggleShiftTimer()" id="timerToggleBtn" class="btn-touch px-3 py-2 rounded-xl bg-emerald-500 text-white text-xs font-black flex items-center gap-2"><i id="timerBtnIcon" class="fa-solid fa-play"></i><span id="timerBtnText">Bắt đầu ca</span></button></div>
             </div>
-
             <div class="grid grid-cols-2 gap-2.5">
                 <div class="bg-white border border-slate-200 rounded-2xl p-3"><div class="flex justify-between text-[11px] font-bold text-slate-500"><span>Hoàn thành</span><i class="fa-solid fa-circle-check text-emerald-500"></i></div><div class="my-2 flex justify-between items-baseline"><b id="pctCompletion" class="text-xl text-slate-900">100%</b><span id="rawCompletion" class="text-[10px] text-slate-400"></span></div><div class="bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barCompletion" class="bg-emerald-500 h-full"></div></div></div>
                 <div class="bg-white border border-slate-200 rounded-2xl p-3"><div class="flex justify-between text-[11px] font-bold text-slate-500"><span>Nhận chuyến</span><i class="fa-solid fa-hand-holding-hand text-blue-500"></i></div><div class="my-2 flex justify-between items-baseline"><b id="pctAccept" class="text-xl text-slate-900">100%</b><span id="rawAccept" class="text-[10px] text-slate-400"></span></div><div class="bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barAccept" class="bg-blue-500 h-full"></div></div></div>
                 <div class="bg-white border border-slate-200 rounded-2xl p-3"><div class="flex justify-between text-[11px] font-bold text-slate-500"><span>Tài xế hủy</span><i class="fa-solid fa-ban text-rose-500"></i></div><div class="my-2 flex justify-between items-baseline"><b id="pctDriverCancel" class="text-xl text-slate-900">0%</b><span id="rawDriverCancel" class="text-[10px] text-slate-400"></span></div><div class="bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barDriverCancel" class="bg-rose-500 h-full"></div></div></div>
                 <div class="bg-white border border-slate-200 rounded-2xl p-3"><div class="flex justify-between text-[11px] font-bold text-slate-500"><span>Khách hủy</span><i class="fa-solid fa-user-xmark text-amber-500"></i></div><div class="my-2 flex justify-between items-baseline"><b id="pctCustomerCancel" class="text-xl text-slate-900">0%</b><span id="rawCustomerCancel" class="text-[10px] text-slate-400"></span></div><div class="bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barCustomerCancel" class="bg-amber-500 h-full"></div></div></div>
             </div>
-
             <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200"><div><span class="text-xs font-black block">Tổng phát đến</span><span class="text-[10px] text-slate-400">Tổng số chuyến được gửi</span></div><b id="valIncoming" class="text-lg px-4 py-1.5 bg-white border border-slate-200 rounded-xl">0</b></div>
             <div class="grid grid-cols-2 gap-2.5">
                 <button type="button" onclick="updateCount('ignored',1)" class="btn-touch text-left bg-orange-50 border-2 border-orange-200 rounded-2xl p-3"><span class="text-xs font-black text-orange-700">Trôi</span><div class="flex justify-between items-center mt-2"><span id="valIgnored" class="text-3xl font-black text-orange-600">0</span><span onclick="event.stopPropagation();updateCount('ignored',-1)" class="rounded-lg bg-white px-3 py-1 text-orange-700" aria-label="Giảm số chuyến trôi">−</span></div></button>
@@ -61,198 +56,61 @@
             <p class="text-center text-[10px] text-slate-400 font-semibold">Chạm ô để cộng, nhấn dấu − để trừ</p>
         </section>
 
-        <section id="tabContentBonus" class="hidden space-y-4">
-            <div><h2 class="text-lg font-black text-slate-900">Thưởng & mục tiêu</h2><p class="text-xs text-slate-500">Theo dõi các chương trình thưởng của bạn.</p></div>
-            <form id="bonusForm" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-                <label class="block text-xs font-bold text-slate-600">Tên chương trình<input id="bonusName" required maxlength="60" class="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="Ví dụ: Thưởng 20 chuyến"></label>
-                <label class="block text-xs font-bold text-slate-600">Tiền thưởng (₫)<input id="bonusAmount" required type="number" min="0" step="1000" class="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="100000"></label>
-                <button class="w-full rounded-xl bg-amber-500 py-3 text-sm font-black text-white">Thêm chương trình</button>
-            </form>
-            <div id="bonusList" class="space-y-2"></div>
-        </section>
-
-        <section id="tabContentEarnings" class="hidden space-y-4">
-            <div><h2 class="text-lg font-black text-slate-900">Thu nhập</h2><p class="text-xs text-slate-500">Ghi lại và xem tổng thu nhập theo ngày.</p></div>
-            <form id="earningsForm" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-                <label class="block text-xs font-bold text-slate-600">Thu nhập hôm nay (₫)<input id="earningsAmount" required type="number" min="0" step="1000" class="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="Nhập số tiền"></label>
-                <button class="w-full rounded-xl bg-emerald-500 py-3 text-sm font-black text-white">Lưu thu nhập hôm nay</button>
-            </form>
-            <div class="bg-white border border-slate-200 rounded-2xl p-4"><p class="text-xs font-bold text-slate-500">TỔNG THU NHẬP HÔM NAY</p><p id="todayEarnings" class="mt-1 text-2xl font-black text-emerald-600">0 ₫</p></div>
-            <div><h3 class="mb-2 text-sm font-black">Lịch sử thu nhập</h3><div id="earningsList" class="space-y-2"></div></div>
-        </section>
+        <section id="tabContentBonus" class="space-y-4" hidden><div><h2 class="text-lg font-black text-slate-900">Thưởng & mục tiêu</h2><p class="text-xs text-slate-500">Theo dõi các chương trình thưởng của bạn.</p></div><form id="bonusForm" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3"><label class="block text-xs font-bold text-slate-600">Tên chương trình<input id="bonusName" required maxlength="60" class="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="Ví dụ: Thưởng 20 chuyến"></label><label class="block text-xs font-bold text-slate-600">Tiền thưởng (₫)<input id="bonusAmount" required type="number" min="0" step="1000" class="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="100000"></label><button class="w-full rounded-xl bg-amber-500 py-3 text-sm font-black text-white">Thêm chương trình</button></form><div id="bonusList" class="space-y-2"></div></section>
+        <section id="tabContentEarnings" class="space-y-4" hidden><div><h2 class="text-lg font-black text-slate-900">Thu nhập</h2><p class="text-xs text-slate-500">Ghi lại và xem tổng thu nhập theo ngày.</p></div><form id="earningsForm" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3"><label class="block text-xs font-bold text-slate-600">Thu nhập hôm nay (₫)<input id="earningsAmount" required type="number" min="0" step="1000" class="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="Nhập số tiền"></label><button class="w-full rounded-xl bg-emerald-500 py-3 text-sm font-black text-white">Lưu thu nhập hôm nay</button></form><div class="bg-white border border-slate-200 rounded-2xl p-4"><p class="text-xs font-bold text-slate-500">TỔNG THU NHẬP HÔM NAY</p><p id="todayEarnings" class="mt-1 text-2xl font-black text-emerald-600">0 ₫</p></div><div><h3 class="mb-2 text-sm font-black">Lịch sử thu nhập</h3><div id="earningsList" class="space-y-2"></div></div></section>
     </main>
 
-    <nav aria-label="Điều hướng chính" class="bg-white border-t border-slate-200 px-5 py-2.5 flex justify-around fixed bottom-0 left-0 right-0 max-w-md mx-auto shadow-lg z-20">
-        <button type="button" onclick="switchTab('rate')" id="navTabRate" aria-current="page" class="btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]"><i class="fa-solid fa-chart-pie text-base"></i><span>Tỉ lệ</span></button>
-        <button type="button" onclick="switchTab('bonus')" id="navTabBonus" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]"><i class="fa-solid fa-gift text-base"></i><span>Thưởng</span></button>
-        <button type="button" onclick="switchTab('earnings')" id="navTabEarnings" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]"><i class="fa-solid fa-wallet text-base"></i><span>Thu nhập</span></button>
+    <nav aria-label="Điều hướng chính" class="bg-white border-t border-slate-200 px-5 py-2.5 flex justify-around fixed bottom-0 left-0 right-0 max-w-md mx-auto shadow-lg">
+        <button type="button" data-tab="rate" id="navTabRate" aria-current="page" class="btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]"><i class="fa-solid fa-chart-pie text-base"></i><span>Tỉ lệ</span></button>
+        <button type="button" data-tab="bonus" id="navTabBonus" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]"><i class="fa-solid fa-gift text-base"></i><span>Thưởng</span></button>
+        <button type="button" data-tab="earnings" id="navTabEarnings" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]"><i class="fa-solid fa-wallet text-base"></i><span>Thu nhập</span></button>
     </nav>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.error('PWA: register service worker failed', error)));
-        }
-
+        if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.error('PWA: register service worker failed', error)));
         const STORAGE_KEY = 'driver_app_state_v3';
-        const state = {
-            ignored: 0, completed: 0, customerCancel: 0, driverCancel: 0,
-            roundingEnabled: true, isShiftActive: false, shiftStartTime: null,
-            elapsedSeconds: 0, bonusPrograms: [], dailyEarnings: {}
-        };
-        let timerInterval = null;
-        let toastTimeout = null;
-
+        const state = { ignored: 0, completed: 0, customerCancel: 0, driverCancel: 0, roundingEnabled: true, isShiftActive: false, shiftStartTime: null, elapsedSeconds: 0, bonusPrograms: [], dailyEarnings: {} };
+        let timerInterval = null, toastTimeout = null;
         function loadState() {
-            try {
-                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-                Object.assign(state, saved);
-            } catch (error) { console.warn('Không thể đọc dữ liệu đã lưu', error); }
-            ['ignored', 'completed', 'customerCancel', 'driverCancel', 'elapsedSeconds'].forEach(key => {
-                const value = Number(state[key]);
-                state[key] = Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
-            });
+            try { Object.assign(state, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); } catch (error) { console.warn('Không thể đọc dữ liệu đã lưu', error); }
+            ['ignored','completed','customerCancel','driverCancel','elapsedSeconds'].forEach(key => { const value = Number(state[key]); state[key] = Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0; });
             if (!Array.isArray(state.bonusPrograms)) state.bonusPrograms = [];
             if (!state.dailyEarnings || typeof state.dailyEarnings !== 'object') state.dailyEarnings = {};
         }
-        function saveState() {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-            catch (error) { showToast('Không lưu được dữ liệu trên thiết bị'); }
-        }
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.remove('opacity-0');
-            toast.classList.add('opacity-100');
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { toast.classList.add('opacity-0'); toast.classList.remove('opacity-100'); }, 2200);
-        }
-        function toggleRounding() {
-            state.roundingEnabled = !state.roundingEnabled;
-            saveState(); render();
-            showToast(state.roundingEnabled ? 'Đã bật làm tròn lên' : 'Đã tắt làm tròn');
-        }
-        function resetCounts() {
-            if (!window.confirm('Đặt lại toàn bộ số cuốc?')) return;
-            state.ignored = state.completed = state.customerCancel = state.driverCancel = 0;
-            saveState(); render(); showToast('Đã đặt lại số cuốc');
-        }
-        function updateCount(type, delta) {
-            if (!Object.prototype.hasOwnProperty.call({ignored: 1, completed: 1, customerCancel: 1, driverCancel: 1}, type)) return;
-            if (delta < 0 && state[type] <= 0) { showToast('Số lượng đã bằng 0'); return; }
-            state[type] = Math.max(0, state[type] + delta);
-            saveState(); render();
-        }
-        function setRate(id, rawId, barId, value) {
-            const bounded = Math.min(100, Math.max(0, value));
-            document.getElementById(rawId).textContent = value.toFixed(1) + '%';
-            document.getElementById(id).textContent = (state.roundingEnabled ? Math.ceil(value) : value.toFixed(2)) + '%';
-            document.getElementById(barId).style.width = bounded + '%';
-        }
+        function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { showToast('Không lưu được dữ liệu trên thiết bị'); } }
+        function showToast(message) { const toast = document.getElementById('toast'); toast.textContent = message; toast.classList.remove('opacity-0'); toast.classList.add('opacity-100'); clearTimeout(toastTimeout); toastTimeout = setTimeout(() => { toast.classList.add('opacity-0'); toast.classList.remove('opacity-100'); }, 2200); }
+        function toggleRounding() { state.roundingEnabled = !state.roundingEnabled; saveState(); render(); showToast(state.roundingEnabled ? 'Đã bật làm tròn lên' : 'Đã tắt làm tròn'); }
+        function resetCounts() { if (!window.confirm('Đặt lại toàn bộ số cuốc?')) return; state.ignored = state.completed = state.customerCancel = state.driverCancel = 0; saveState(); render(); showToast('Đã đặt lại số cuốc'); }
+        function updateCount(type, delta) { if (!['ignored','completed','customerCancel','driverCancel'].includes(type)) return; if (delta < 0 && state[type] <= 0) { showToast('Số lượng đã bằng 0'); return; } state[type] = Math.max(0, state[type] + delta); saveState(); render(); }
+        function setRate(id, rawId, barId, value) { const bounded = Math.min(100, Math.max(0, value)); document.getElementById(rawId).textContent = value.toFixed(1) + '%'; document.getElementById(id).textContent = (state.roundingEnabled ? Math.ceil(value) : value.toFixed(2)) + '%'; document.getElementById(barId).style.width = bounded + '%'; }
         function render() {
-            const incoming = state.ignored + state.completed + state.customerCancel + state.driverCancel;
-            document.getElementById('valIncoming').textContent = incoming;
-            document.getElementById('valIgnored').textContent = state.ignored;
-            document.getElementById('valCompleted').textContent = state.completed;
-            document.getElementById('valCustomerCancel').textContent = state.customerCancel;
-            document.getElementById('valDriverCancel').textContent = state.driverCancel;
-            const completionBase = incoming - state.customerCancel;
-            const accepted = incoming - state.ignored;
-            setRate('pctCompletion', 'rawCompletion', 'barCompletion', completionBase > 0 ? Math.min(100, state.completed / completionBase * 100) : 100);
-            setRate('pctAccept', 'rawAccept', 'barAccept', incoming > 0 ? accepted / incoming * 100 : 100);
-            setRate('pctDriverCancel', 'rawDriverCancel', 'barDriverCancel', accepted > 0 ? state.driverCancel / accepted * 100 : 0);
-            setRate('pctCustomerCancel', 'rawCustomerCancel', 'barCustomerCancel', incoming > 0 ? state.customerCancel / incoming * 100 : 0);
-            const rounding = document.getElementById('roundingBtn');
-            rounding.textContent = 'Làm tròn: ' + (state.roundingEnabled ? 'Bật' : 'Tắt');
-            rounding.className = 'px-2 py-2 rounded-xl border text-[10px] font-extrabold ' + (state.roundingEnabled ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-100 text-slate-600 border-slate-300');
+            const incoming = state.ignored + state.completed + state.customerCancel + state.driverCancel, completionBase = incoming - state.customerCancel, accepted = incoming - state.ignored;
+            document.getElementById('valIncoming').textContent = incoming; document.getElementById('valIgnored').textContent = state.ignored; document.getElementById('valCompleted').textContent = state.completed; document.getElementById('valCustomerCancel').textContent = state.customerCancel; document.getElementById('valDriverCancel').textContent = state.driverCancel;
+            setRate('pctCompletion','rawCompletion','barCompletion',completionBase > 0 ? Math.min(100,state.completed / completionBase * 100) : 100); setRate('pctAccept','rawAccept','barAccept',incoming > 0 ? accepted / incoming * 100 : 100); setRate('pctDriverCancel','rawDriverCancel','barDriverCancel',accepted > 0 ? state.driverCancel / accepted * 100 : 0); setRate('pctCustomerCancel','rawCustomerCancel','barCustomerCancel',incoming > 0 ? state.customerCancel / incoming * 100 : 0);
+            const rounding = document.getElementById('roundingBtn'); rounding.textContent = 'Làm tròn: ' + (state.roundingEnabled ? 'Bật' : 'Tắt'); rounding.className = 'px-2 py-2 rounded-xl border text-[10px] font-extrabold ' + (state.roundingEnabled ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-100 text-slate-600 border-slate-300');
             renderTimer(); renderBonuses(); renderEarnings();
         }
         function switchTab(tab) {
-            const tabs = ['rate', 'bonus', 'earnings'];
-            if (!tabs.includes(tab)) return;
-            tabs.forEach(name => {
-                document.getElementById('tabContent' + name[0].toUpperCase() + name.slice(1)).classList.toggle('hidden', name !== tab);
-                const button = document.getElementById('navTab' + name[0].toUpperCase() + name.slice(1));
-                button.className = 'btn-touch flex flex-col items-center gap-1 font-extrabold text-[11px] ' + (name === tab ? (name === 'bonus' ? 'text-amber-600' : 'text-emerald-600') : 'text-slate-400');
-                if (name === tab) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
-            });
+            const tabs = ['rate','bonus','earnings']; if (!tabs.includes(tab)) return;
+            tabs.forEach(name => { const section = document.getElementById('tabContent' + name[0].toUpperCase() + name.slice(1)); const button = document.getElementById('navTab' + name[0].toUpperCase() + name.slice(1)); section.hidden = name !== tab; button.className = 'btn-touch flex flex-col items-center gap-1 font-extrabold text-[11px] ' + (name === tab ? (name === 'bonus' ? 'text-amber-600' : 'text-emerald-600') : 'text-slate-400'); if (name === tab) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current'); });
             document.querySelector('main').scrollTop = 0;
         }
-        function currentElapsedSeconds() {
-            return Math.max(0, Number(state.elapsedSeconds) || 0) + (state.isShiftActive && state.shiftStartTime ? Math.floor((Date.now() - state.shiftStartTime) / 1000) : 0);
-        }
-        function renderTimer() {
-            const total = Math.floor(currentElapsedSeconds());
-            const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
-            document.getElementById('timerDisplay').textContent = [h, m, s].map(value => String(value).padStart(2, '0')).join(':');
-            document.getElementById('timerBtnText').textContent = state.isShiftActive ? 'Dừng ca' : 'Bắt đầu ca';
-            document.getElementById('timerBtnIcon').className = state.isShiftActive ? 'fa-solid fa-pause' : 'fa-solid fa-play';
-            document.getElementById('timerToggleBtn').className = 'btn-touch px-3 py-2 rounded-xl text-white text-xs font-black flex items-center gap-2 ' + (state.isShiftActive ? 'bg-rose-500' : 'bg-emerald-500');
-            document.getElementById('timerIconBg').className = 'w-9 h-9 rounded-xl flex items-center justify-center ' + (state.isShiftActive ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600');
-        }
-        function toggleShiftTimer() {
-            if (state.isShiftActive) {
-                state.elapsedSeconds = currentElapsedSeconds();
-                state.isShiftActive = false;
-                state.shiftStartTime = null;
-                clearInterval(timerInterval); timerInterval = null;
-                showToast('Đã dừng thời gian chạy');
-            } else {
-                state.isShiftActive = true;
-                state.shiftStartTime = Date.now();
-                clearInterval(timerInterval);
-                timerInterval = setInterval(renderTimer, 500);
-                showToast('Đã bắt đầu tính thời gian chạy');
-            }
-            saveState(); renderTimer();
-        }
-        function resetShiftTimer() {
-            if (!window.confirm('Bạn có chắc muốn đặt lại thời gian chạy về 00:00:00?')) return;
-            clearInterval(timerInterval); timerInterval = null;
-            state.isShiftActive = false;
-            state.shiftStartTime = null;
-            state.elapsedSeconds = 0;
-            saveState(); renderTimer();
-            showToast('Đã đặt lại thời gian chạy');
-        }
-        function formatMoney(amount) {
-            return new Intl.NumberFormat('vi-VN').format(Number(amount) || 0) + ' ₫';
-        }
-        function renderBonuses() {
-            const list = document.getElementById('bonusList');
-            if (!state.bonusPrograms.length) { list.innerHTML = '<p class="rounded-xl bg-white p-4 text-center text-xs text-slate-400">Chưa có chương trình thưởng nào.</p>'; return; }
-            list.innerHTML = state.bonusPrograms.map((item, index) => `<div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3"><div><p class="text-sm font-bold">${escapeHTML(item.name)}</p><p class="text-xs text-amber-600 font-bold">${formatMoney(item.amount)}</p></div><button type="button" onclick="deleteBonus(${index})" class="px-3 py-2 text-rose-500" aria-label="Xóa chương trình thưởng"><i class="fa-solid fa-trash"></i></button></div>`).join('');
-        }
-        function escapeHTML(value) {
-            return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-        }
-        function deleteBonus(index) { state.bonusPrograms.splice(index, 1); saveState(); renderBonuses(); showToast('Đã xóa chương trình thưởng'); }
-        function dateKey(date = new Date()) { return date.toISOString().slice(0, 10); }
-        function renderEarnings() {
-            const today = dateKey();
-            document.getElementById('todayEarnings').textContent = formatMoney(state.dailyEarnings[today] || 0);
-            const entries = Object.entries(state.dailyEarnings).filter(([, amount]) => Number(amount) > 0).sort(([a], [b]) => b.localeCompare(a));
-            document.getElementById('earningsList').innerHTML = entries.length ? entries.map(([date, amount]) => `<div class="flex justify-between rounded-xl border border-slate-200 bg-white p-3 text-sm"><span>${new Date(date + 'T00:00:00').toLocaleDateString('vi-VN')}</span><b>${formatMoney(amount)}</b></div>`).join('') : '<p class="rounded-xl bg-white p-4 text-center text-xs text-slate-400">Chưa có dữ liệu thu nhập.</p>';
-        }
-        document.getElementById('bonusForm').addEventListener('submit', event => {
-            event.preventDefault();
-            const name = document.getElementById('bonusName').value.trim();
-            const amount = Number(document.getElementById('bonusAmount').value);
-            if (!name || !Number.isFinite(amount) || amount < 0) return;
-            state.bonusPrograms.unshift({name, amount}); saveState(); renderBonuses(); event.target.reset(); showToast('Đã thêm chương trình thưởng');
-        });
-        document.getElementById('earningsForm').addEventListener('submit', event => {
-            event.preventDefault();
-            const amount = Number(document.getElementById('earningsAmount').value);
-            if (!Number.isFinite(amount) || amount < 0) return;
-            state.dailyEarnings[dateKey()] = amount; saveState(); renderEarnings(); showToast('Đã lưu thu nhập hôm nay');
-        });
-
+        document.querySelector('nav[aria-label="Điều hướng chính"]').addEventListener('click', event => { const button = event.target.closest('button[data-tab]'); if (button) { event.preventDefault(); switchTab(button.dataset.tab); } });
+        function currentElapsedSeconds() { return Math.max(0,Number(state.elapsedSeconds) || 0) + (state.isShiftActive && state.shiftStartTime ? Math.floor((Date.now() - state.shiftStartTime) / 1000) : 0); }
+        function renderTimer() { const total = Math.floor(currentElapsedSeconds()), h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60; document.getElementById('timerDisplay').textContent = [h,m,s].map(value => String(value).padStart(2,'0')).join(':'); document.getElementById('timerBtnText').textContent = state.isShiftActive ? 'Dừng ca' : 'Bắt đầu ca'; document.getElementById('timerBtnIcon').className = state.isShiftActive ? 'fa-solid fa-pause' : 'fa-solid fa-play'; document.getElementById('timerToggleBtn').className = 'btn-touch px-3 py-2 rounded-xl text-white text-xs font-black flex items-center gap-2 ' + (state.isShiftActive ? 'bg-rose-500' : 'bg-emerald-500'); document.getElementById('timerIconBg').className = 'w-9 h-9 rounded-xl flex items-center justify-center ' + (state.isShiftActive ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'); }
+        function toggleShiftTimer() { if (state.isShiftActive) { state.elapsedSeconds = currentElapsedSeconds(); state.isShiftActive = false; state.shiftStartTime = null; clearInterval(timerInterval); timerInterval = null; showToast('Đã dừng thời gian chạy'); } else { state.isShiftActive = true; state.shiftStartTime = Date.now(); clearInterval(timerInterval); timerInterval = setInterval(renderTimer,500); showToast('Đã bắt đầu tính thời gian chạy'); } saveState(); renderTimer(); }
+        function resetShiftTimer() { if (!window.confirm('Bạn có chắc muốn đặt lại thời gian chạy về 00:00:00?')) return; clearInterval(timerInterval); timerInterval = null; state.isShiftActive = false; state.shiftStartTime = null; state.elapsedSeconds = 0; saveState(); renderTimer(); showToast('Đã đặt lại thời gian chạy'); }
+        function formatMoney(amount) { return new Intl.NumberFormat('vi-VN').format(Number(amount) || 0) + ' ₫'; }
+        function escapeHTML(value) { return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
+        function renderBonuses() { const list = document.getElementById('bonusList'); if (!state.bonusPrograms.length) { list.innerHTML = '<p class="rounded-xl bg-white p-4 text-center text-xs text-slate-400">Chưa có chương trình thưởng nào.</p>'; return; } list.innerHTML = state.bonusPrograms.map((item,index) => `<div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3"><div><p class="text-sm font-bold">${escapeHTML(item.name)}</p><p class="text-xs text-amber-600 font-bold">${formatMoney(item.amount)}</p></div><button type="button" onclick="deleteBonus(${index})" class="px-3 py-2 text-rose-500" aria-label="Xóa chương trình thưởng"><i class="fa-solid fa-trash"></i></button></div>`).join(''); }
+        function deleteBonus(index) { state.bonusPrograms.splice(index,1); saveState(); renderBonuses(); showToast('Đã xóa chương trình thưởng'); }
+        function dateKey() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`; }
+        function renderEarnings() { const today = dateKey(); document.getElementById('todayEarnings').textContent = formatMoney(state.dailyEarnings[today] || 0); const entries = Object.entries(state.dailyEarnings).filter(([,amount]) => Number(amount) > 0).sort(([a],[b]) => b.localeCompare(a)); document.getElementById('earningsList').innerHTML = entries.length ? entries.map(([date,amount]) => `<div class="flex justify-between rounded-xl border border-slate-200 bg-white p-3 text-sm"><span>${new Date(date+'T00:00:00').toLocaleDateString('vi-VN')}</span><b>${formatMoney(amount)}</b></div>`).join('') : '<p class="rounded-xl bg-white p-4 text-center text-xs text-slate-400">Chưa có dữ liệu thu nhập.</p>'; }
+        document.getElementById('bonusForm').addEventListener('submit', event => { event.preventDefault(); const name = document.getElementById('bonusName').value.trim(), amount = Number(document.getElementById('bonusAmount').value); if (!name || !Number.isFinite(amount) || amount < 0) return; state.bonusPrograms.unshift({name,amount}); saveState(); renderBonuses(); event.target.reset(); showToast('Đã thêm chương trình thưởng'); });
+        document.getElementById('earningsForm').addEventListener('submit', event => { event.preventDefault(); const amount = Number(document.getElementById('earningsAmount').value); if (!Number.isFinite(amount) || amount < 0) return; state.dailyEarnings[dateKey()] = amount; saveState(); renderEarnings(); showToast('Đã lưu thu nhập hôm nay'); });
         loadState();
-        if (state.isShiftActive) {
-            if (!Number.isFinite(Number(state.shiftStartTime))) { state.isShiftActive = false; state.shiftStartTime = null; }
-            else timerInterval = setInterval(renderTimer, 500);
-        }
-        render();
+        if (state.isShiftActive) { if (!Number.isFinite(Number(state.shiftStartTime))) { state.isShiftActive = false; state.shiftStartTime = null; } else timerInterval = setInterval(renderTimer,500); }
+        render(); switchTab('rate');
     </script>
 </body>
 </html>
