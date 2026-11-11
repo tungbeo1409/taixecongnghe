@@ -46,7 +46,7 @@
                 <i class="fa-solid fa-circle-check text-xs"></i>
                 <span id="roundingText">Làm tròn: Bật</span>
             </button>
-            <button onclick="resetAll()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold shadow-xs hover:bg-slate-200 text-xs" title="Xóa dữ liệu">
+            <button onclick="resetAll()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold shadow-xs hover:bg-slate-200 text-xs" title="Đặt lại bộ đếm cuốc">
                 <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
             <button onclick="openHistoryModal()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold shadow-xs" title="Lịch sử">
@@ -71,152 +71,79 @@
                         <span id="timerDisplay" class="text-base font-black text-slate-900 tracking-tight">00:00:00</span>
                     </div>
                 </div>
-                <button onclick="toggleShiftTimer()" id="timerToggleBtn" class="btn-touch px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all">
-                    <i id="timerBtnIcon" class="fa-solid fa-play text-xs"></i>
-                    <span id="timerBtnText">Bắt đầu ca</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="resetShiftTimer()" id="timerResetBtn" class="btn-touch w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 flex items-center justify-center shadow-xs" title="Đặt lại thời gian" aria-label="Đặt lại thời gian">
+                        <i class="fa-solid fa-rotate-left text-xs"></i>
+                    </button>
+                    <button onclick="toggleShiftTimer()" id="timerToggleBtn" class="btn-touch px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all">
+                        <i id="timerBtnIcon" class="fa-solid fa-play text-xs"></i>
+                        <span id="timerBtnText">Bắt đầu ca</span>
+                    </button>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2.5 shrink-0">
                 <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
-                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
-                        <span>Hoàn thành</span>
-                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
-                    </div>
-                    <div class="my-1.5 flex items-baseline justify-between">
-                        <span id="pctCompletion" class="text-xl font-black text-slate-900">100.00%</span>
-                        <span id="rawCompletion" class="text-[10px] text-slate-400 font-medium">100%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div id="barCompletion" class="bg-emerald-500 h-full transition-all duration-300" style="width: 100%"></div>
-                    </div>
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500"><span>Hoàn thành</span><i class="fa-solid fa-circle-check text-emerald-500"></i></div>
+                    <div class="my-1.5 flex items-baseline justify-between"><span id="pctCompletion" class="text-xl font-black text-slate-900">100.00%</span><span id="rawCompletion" class="text-[10px] text-slate-400 font-medium">100%</span></div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barCompletion" class="bg-emerald-500 h-full transition-all duration-300" style="width: 100%"></div></div>
                 </div>
-
                 <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
-                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
-                        <span>Nhận chuyến</span>
-                        <i class="fa-solid fa-hand-holding-hand text-blue-500"></i>
-                    </div>
-                    <div class="my-1.5 flex items-baseline justify-between">
-                        <span id="pctAccept" class="text-xl font-black text-slate-900">100.00%</span>
-                        <span id="rawAccept" class="text-[10px] text-slate-400 font-medium">100%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div id="barAccept" class="bg-blue-500 h-full transition-all duration-300" style="width: 100%"></div>
-                    </div>
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500"><span>Nhận chuyến</span><i class="fa-solid fa-hand-holding-hand text-blue-500"></i></div>
+                    <div class="my-1.5 flex items-baseline justify-between"><span id="pctAccept" class="text-xl font-black text-slate-900">100.00%</span><span id="rawAccept" class="text-[10px] text-slate-400 font-medium">100%</span></div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barAccept" class="bg-blue-500 h-full transition-all duration-300" style="width: 100%"></div></div>
                 </div>
-
                 <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
-                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
-                        <span>Tài xế hủy</span>
-                        <i class="fa-solid fa-ban text-rose-500"></i>
-                    </div>
-                    <div class="my-1.5 flex items-baseline justify-between">
-                        <span id="pctDriverCancel" class="text-xl font-black text-slate-900">0.00%</span>
-                        <span id="rawDriverCancel" class="text-[10px] text-slate-400 font-medium">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div id="barDriverCancel" class="bg-rose-500 h-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500"><span>Tài xế hủy</span><i class="fa-solid fa-ban text-rose-500"></i></div>
+                    <div class="my-1.5 flex items-baseline justify-between"><span id="pctDriverCancel" class="text-xl font-black text-slate-900">0.00%</span><span id="rawDriverCancel" class="text-[10px] text-slate-400 font-medium">0%</span></div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barDriverCancel" class="bg-rose-500 h-full transition-all duration-300" style="width: 0%"></div></div>
                 </div>
-
                 <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
-                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
-                        <span>Khách hủy</span>
-                        <i class="fa-solid fa-user-xmark text-amber-500"></i>
-                    </div>
-                    <div class="my-1.5 flex items-baseline justify-between">
-                        <span id="pctCustomerCancel" class="text-xl font-black text-slate-900">0.00%</span>
-                        <span id="rawCustomerCancel" class="text-[10px] text-slate-400 font-medium">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div id="barCustomerCancel" class="bg-amber-500 h-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500"><span>Khách hủy</span><i class="fa-solid fa-user-xmark text-amber-500"></i></div>
+                    <div class="my-1.5 flex items-baseline justify-between"><span id="pctCustomerCancel" class="text-xl font-black text-slate-900">0.00%</span><span id="rawCustomerCancel" class="text-[10px] text-slate-400 font-medium">0%</span></div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barCustomerCancel" class="bg-amber-500 h-full transition-all duration-300" style="width: 0%"></div></div>
                 </div>
             </div>
 
             <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 shrink-0">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">
-                        <i class="fa-solid fa-tower-broadcast"></i>
-                    </div>
-                    <div>
-                        <span class="text-xs font-black text-slate-800 block">Tổng Phát Đến</span>
-                        <span class="text-[10px] text-slate-400 font-semibold">Tự động = Trôi + Hoàn thành + Khách + Tài xế</span>
-                    </div>
+                    <div class="w-8 h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm"><i class="fa-solid fa-tower-broadcast"></i></div>
+                    <div><span class="text-xs font-black text-slate-800 block">Tổng Phát Đến</span><span class="text-[10px] text-slate-400 font-semibold">Tự động = Trôi + Hoàn thành + Khách + Tài xế</span></div>
                 </div>
                 <div class="text-lg font-black text-slate-900 px-4 py-1.5 bg-white border border-slate-200 rounded-xl min-w-[60px] text-center shadow-xs" id="valIncoming">0</div>
             </div>
 
             <div class="grid grid-cols-2 gap-2.5 shrink-0">
                 <div onclick="updateCount('ignored', 1)" class="btn-touch relative bg-orange-50 border-2 border-orange-200 hover:border-orange-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-sm">
-                    <button onclick="event.stopPropagation(); updateCount('ignored', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-orange-300 text-orange-600 flex items-center justify-center shadow-xs">
-                        <i class="fa-solid fa-minus text-xs"></i>
-                    </button>
-                    <div class="flex justify-end items-center">
-                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700">Trôi</span>
-                    </div>
-                    <div class="my-2 text-center">
-                        <span class="text-3xl font-black text-orange-600 tracking-tight" id="valIgnored">0</span>
-                    </div>
+                    <button onclick="event.stopPropagation(); updateCount('ignored', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-orange-300 text-orange-600 flex items-center justify-center shadow-xs"><i class="fa-solid fa-minus text-xs"></i></button>
+                    <div class="flex justify-end items-center"><span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700">Trôi</span></div>
+                    <div class="my-2 text-center"><span class="text-3xl font-black text-orange-600 tracking-tight" id="valIgnored">0</span></div>
                 </div>
-
                 <div onclick="updateCount('driverCancel', 1)" class="btn-touch relative bg-rose-50 border-2 border-rose-200 hover:border-rose-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-sm">
-                    <button onclick="event.stopPropagation(); updateCount('driverCancel', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-rose-300 text-rose-600 flex items-center justify-center shadow-xs">
-                        <i class="fa-solid fa-minus text-xs"></i>
-                    </button>
-                    <div class="flex justify-end items-center">
-                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700">Tài xế hủy</span>
-                    </div>
-                    <div class="my-2 text-center">
-                        <span class="text-3xl font-black text-rose-600 tracking-tight" id="valDriverCancel">0</span>
-                    </div>
+                    <button onclick="event.stopPropagation(); updateCount('driverCancel', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-rose-300 text-rose-600 flex items-center justify-center shadow-xs"><i class="fa-solid fa-minus text-xs"></i></button>
+                    <div class="flex justify-end items-center"><span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700">Tài xế hủy</span></div>
+                    <div class="my-2 text-center"><span class="text-3xl font-black text-rose-600 tracking-tight" id="valDriverCancel">0</span></div>
                 </div>
-
                 <div onclick="updateCount('customerCancel', 1)" class="btn-touch relative bg-amber-50 border-2 border-amber-200 hover:border-amber-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-sm">
-                    <button onclick="event.stopPropagation(); updateCount('customerCancel', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-amber-300 text-amber-600 flex items-center justify-center shadow-xs">
-                        <i class="fa-solid fa-minus text-xs"></i>
-                    </button>
-                    <div class="flex justify-end items-center">
-                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Khách hủy</span>
-                    </div>
-                    <div class="my-2 text-center">
-                        <span class="text-3xl font-black text-amber-600 tracking-tight" id="valCustomerCancel">0</span>
-                    </div>
+                    <button onclick="event.stopPropagation(); updateCount('customerCancel', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-amber-300 text-amber-600 flex items-center justify-center shadow-xs"><i class="fa-solid fa-minus text-xs"></i></button>
+                    <div class="flex justify-end items-center"><span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Khách hủy</span></div>
+                    <div class="my-2 text-center"><span class="text-3xl font-black text-amber-600 tracking-tight" id="valCustomerCancel">0</span></div>
                 </div>
-
                 <div onclick="updateCount('completed', 1)" class="btn-touch relative bg-emerald-50 border-2 border-emerald-200 hover:border-emerald-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-sm">
-                    <button onclick="event.stopPropagation(); updateCount('completed', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-emerald-300 text-emerald-600 flex items-center justify-center shadow-xs">
-                        <i class="fa-solid fa-minus text-xs"></i>
-                    </button>
-                    <div class="flex justify-end items-center">
-                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Hoàn thành</span>
-                    </div>
-                    <div class="my-2 text-center">
-                        <span class="text-3xl font-black text-emerald-600 tracking-tight" id="valCompleted">0</span>
-                    </div>
+                    <button onclick="event.stopPropagation(); updateCount('completed', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-emerald-300 text-emerald-600 flex items-center justify-center shadow-xs"><i class="fa-solid fa-minus text-xs"></i></button>
+                    <div class="flex justify-end items-center"><span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Hoàn thành</span></div>
+                    <div class="my-2 text-center"><span class="text-3xl font-black text-emerald-600 tracking-tight" id="valCompleted">0</span></div>
                 </div>
             </div>
 
-            <div class="text-center text-[10px] text-slate-400 font-semibold pt-1">
-                Chạm để cộng cuốc tương ứng
-            </div>
+            <div class="text-center text-[10px] text-slate-400 font-semibold pt-1">Chạm để cộng cuốc tương ứng</div>
         </div>
     </main>
 
     <nav class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-around shrink-0 shadow-lg z-40 fixed bottom-0 left-0 right-0 max-w-md mx-auto">
-        <button onclick="switchTab('rate')" id="navTabRate" class="btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]">
-            <i class="fa-solid fa-chart-pie text-base"></i>
-            <span>Tỉ lệ</span>
-        </button>
-        <button onclick="switchTab('bonus')" id="navTabBonus" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]">
-            <i class="fa-solid fa-gift text-base"></i>
-            <span>Thưởng</span>
-        </button>
-        <button onclick="switchTab('earnings')" id="navTabEarnings" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]">
-            <i class="fa-solid fa-wallet text-base"></i>
-            <span>Thu nhập</span>
-        </button>
+        <button onclick="switchTab('rate')" id="navTabRate" class="btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]"><i class="fa-solid fa-chart-pie text-base"></i><span>Tỉ lệ</span></button>
+        <button onclick="switchTab('bonus')" id="navTabBonus" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]"><i class="fa-solid fa-gift text-base"></i><span>Thưởng</span></button>
+        <button onclick="switchTab('earnings')" id="navTabEarnings" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]"><i class="fa-solid fa-wallet text-base"></i><span>Thu nhập</span></button>
     </nav>
 
     <script>
@@ -242,6 +169,7 @@
             shiftStartTime: null,
             elapsedSeconds: 0
         };
+        let timerInterval = null;
 
         function showToast(msg) {
             const t = document.getElementById('toast');
@@ -249,9 +177,7 @@
             t.textContent = msg;
             t.style.opacity = '1';
             clearTimeout(showToast.timeout);
-            showToast.timeout = setTimeout(() => {
-                t.style.opacity = '0';
-            }, 2000);
+            showToast.timeout = setTimeout(() => { t.style.opacity = '0'; }, 2000);
         }
 
         function saveState() {
@@ -259,31 +185,28 @@
         }
 
         function render() {
-            document.getElementById('valIncoming').textContent = state.ignored + state.completed + state.customerCancel + state.driverCancel;
+            const incoming = state.ignored + state.completed + state.customerCancel + state.driverCancel;
+            document.getElementById('valIncoming').textContent = incoming;
             document.getElementById('valIgnored').textContent = state.ignored;
             document.getElementById('valCompleted').textContent = state.completed;
             document.getElementById('valCustomerCancel').textContent = state.customerCancel;
             document.getElementById('valDriverCancel').textContent = state.driverCancel;
 
-            const denomCompletion = (state.ignored + state.completed + state.customerCancel + state.driverCancel) - state.customerCancel;
-            const rawCompletionVal = denomCompletion > 0 ? (state.completed / denomCompletion) * 100 : 100;
-            const rawAcceptVal = state.ignored + state.completed + state.customerCancel + state.driverCancel > 0
-                ? ((state.ignored + state.completed + state.customerCancel + state.driverCancel - state.ignored) / (state.ignored + state.completed + state.customerCancel + state.driverCancel)) * 100
-                : 100;
-            const totalAccepted = state.ignored + state.completed + state.customerCancel + state.driverCancel - state.ignored;
+            const denomCompletion = incoming - state.customerCancel;
+            const rawCompletionVal = Math.min(100, denomCompletion > 0 ? (state.completed / denomCompletion) * 100 : 100);
+            const rawAcceptVal = incoming > 0 ? ((incoming - state.ignored) / incoming) * 100 : 100;
+            const totalAccepted = incoming - state.ignored;
             const rawDriverCancelVal = totalAccepted > 0 ? (state.driverCancel / totalAccepted) * 100 : 0;
-            const rawCustomerCancelVal = (state.ignored + state.completed + state.customerCancel + state.driverCancel) > 0 ? (state.customerCancel / (state.ignored + state.completed + state.customerCancel + state.driverCancel)) * 100 : 0;
+            const rawCustomerCancelVal = incoming > 0 ? (state.customerCancel / incoming) * 100 : 0;
 
             document.getElementById('rawCompletion').textContent = rawCompletionVal.toFixed(1) + '%';
             document.getElementById('rawAccept').textContent = rawAcceptVal.toFixed(1) + '%';
             document.getElementById('rawDriverCancel').textContent = rawDriverCancelVal.toFixed(1) + '%';
             document.getElementById('rawCustomerCancel').textContent = rawCustomerCancelVal.toFixed(1) + '%';
-
             document.getElementById('pctCompletion').textContent = state.roundingEnabled ? Math.ceil(rawCompletionVal) + '%' : rawCompletionVal.toFixed(2) + '%';
             document.getElementById('pctAccept').textContent = state.roundingEnabled ? Math.ceil(rawAcceptVal) + '%' : rawAcceptVal.toFixed(2) + '%';
             document.getElementById('pctDriverCancel').textContent = state.roundingEnabled ? Math.ceil(rawDriverCancelVal) + '%' : rawDriverCancelVal.toFixed(2) + '%';
             document.getElementById('pctCustomerCancel').textContent = state.roundingEnabled ? Math.ceil(rawCustomerCancelVal) + '%' : rawCustomerCancelVal.toFixed(2) + '%';
-
             document.getElementById('barCompletion').style.width = rawCompletionVal + '%';
             document.getElementById('barAccept').style.width = rawAcceptVal + '%';
             document.getElementById('barDriverCancel').style.width = rawDriverCancelVal + '%';
@@ -308,11 +231,9 @@
         }
 
         function updateCount(type, delta) {
-            if (delta > 0) {
-                state[type] += delta;
-            } else if (state[type] > 0) {
-                state[type] += delta;
-            } else {
+            if (delta > 0) state[type] += delta;
+            else if (state[type] > 0) state[type] += delta;
+            else {
                 showToast('Số lượng đã bằng 0!');
                 return;
             }
@@ -331,37 +252,58 @@
         }
 
         function switchTab(tab) {
-            const tabRate = document.getElementById('tabContentRate');
             const navRate = document.getElementById('navTabRate');
             const navBonus = document.getElementById('navTabBonus');
             const navEarnings = document.getElementById('navTabEarnings');
-            const tabs = [navRate, navBonus, navEarnings];
-            tabs.forEach((el) => {
+            [navRate, navBonus, navEarnings].forEach((el) => {
                 if (el) el.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
             });
-            if (tab === 'rate') {
-                navRate.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
-            } else if (tab === 'bonus') {
-                navBonus.className = 'btn-touch flex flex-col items-center gap-1 text-amber-600 font-extrabold text-[11px]';
-            } else if (tab === 'earnings') {
-                navEarnings.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
-            }
+            if (tab === 'rate') navRate.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
+            else if (tab === 'bonus') navBonus.className = 'btn-touch flex flex-col items-center gap-1 text-amber-600 font-extrabold text-[11px]';
+            else if (tab === 'earnings') navEarnings.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
         }
 
         function toggleShiftTimer() {
             state.isShiftActive = !state.isShiftActive;
             if (state.isShiftActive) {
                 state.shiftStartTime = Date.now();
+                startTimerInterval();
                 showToast('Đã bắt đầu tính thời gian chạy!');
             } else {
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+                state.shiftStartTime = null;
                 showToast('Đã tạm dừng thời gian chạy!');
             }
             saveState();
             updateTimerUI();
         }
 
+        function startTimerInterval() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!state.isShiftActive || !state.shiftStartTime) return;
+                state.elapsedSeconds += Math.floor((Date.now() - state.shiftStartTime) / 1000);
+                state.shiftStartTime = Date.now();
+                saveState();
+                updateTimerUI();
+            }, 1000);
+        }
+
+        function resetShiftTimer() {
+            if (!window.confirm('Bạn có chắc muốn đặt lại thời gian chạy về 00:00:00?')) return;
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            state.isShiftActive = false;
+            state.shiftStartTime = null;
+            state.elapsedSeconds = 0;
+            saveState();
+            updateTimerUI();
+            showToast('Đã đặt lại thời gian chạy');
+        }
+
         function updateTimerUI() {
-            const secTotal = state.elapsedSeconds || 0;
+            const secTotal = Math.max(0, state.elapsedSeconds || 0);
             const h = Math.floor(secTotal / 3600);
             const m = Math.floor((secTotal % 3600) / 60);
             const s = secTotal % 60;
@@ -371,14 +313,17 @@
             const btn = document.getElementById('timerToggleBtn');
             const btnIcon = document.getElementById('timerBtnIcon');
             const btnText = document.getElementById('timerBtnText');
+            const iconBg = document.getElementById('timerIconBg');
             if (state.isShiftActive) {
                 if (btn) btn.className = 'btn-touch px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all';
                 if (btnIcon) btnIcon.className = 'fa-solid fa-pause text-xs';
                 if (btnText) btnText.textContent = 'Dừng ca';
+                if (iconBg) iconBg.className = 'w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm shadow-xs transition-all animate-pulse';
             } else {
                 if (btn) btn.className = 'btn-touch px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all';
                 if (btnIcon) btnIcon.className = 'fa-solid fa-play text-xs';
                 if (btnText) btnText.textContent = 'Bắt đầu ca';
+                if (iconBg) iconBg.className = 'w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shadow-xs transition-all';
             }
         }
 
@@ -390,6 +335,7 @@
                 console.warn('Invalid saved state', error);
             }
         }
+        if (state.isShiftActive) startTimerInterval();
         render();
         updateTimerUI();
     </script>
