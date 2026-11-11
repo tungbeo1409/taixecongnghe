@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trợ Lý Cuốc Xe Tài Xế</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .btn-touch {
+            transition: transform 0.08s ease, background-color 0.15s ease;
+        }
+        .btn-touch:active {
+            transform: scale(0.94);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-full flex flex-col justify-between max-w-md mx-auto relative overflow-x-hidden">
+
+    <!-- TOP HEADER -->
+    <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shrink-0 shadow-xs z-30">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-black shadow-sm">
+                <i class="fa-solid fa-gauge-high text-sm"></i>
+            </div>
+            <div>
+                <h1 class="text-sm font-black text-slate-900 tracking-tight">Trợ Lý Cuốc Xe</h1>
+                <p class="text-[10px] text-slate-500 font-semibold">Tối ưu & Quản lý tỉ lệ</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <!-- Rounding Toggle Button -->
+            <button onclick="toggleRounding()" id="roundingBtn" class="px-2.5 py-1.5 rounded-xl border text-[11px] font-extrabold flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border-emerald-300 shadow-xs">
+                <i class="fa-solid fa-circle-check text-xs"></i>
+                <span id="roundingText">Làm tròn: Bật</span>
+            </button>
+            <button onclick="resetAll()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold shadow-xs hover:bg-slate-200 text-rose-600" title="Đặt lại từ đầu">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+            <button onclick="openHistoryModal()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold shadow-xs">
+                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg transition-all duration-300 opacity-0 pointer-events-none">
+        Thông báo
+    </div>
+
+    <!-- MAIN CONTAINER WITH TABS -->
+    <main class="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 pb-20">
+
+        <!-- TAB 1: TỈ LỆ HOẠT ĐỘNG (RATE) -->
+        <div id="tabContentRate" class="flex-1 flex flex-col justify-between min-h-0 space-y-3">
+            <!-- SHIFT TIMER BLOCK -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div id="timerIconBg" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shadow-xs transition-all">
+                        <i id="timerIcon" class="fa-solid fa-stopwatch"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Tính thời gian chạy</span>
+                        <span id="timerDisplay" class="text-base font-black text-slate-900 tracking-tight">00:00:00</span>
+                    </div>
+                </div>
+                <button onclick="toggleShiftTimer()" id="timerToggleBtn" class="btn-touch px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all">
+                    <i id="timerBtnIcon" class="fa-solid fa-play text-xs"></i>
+                    <span id="timerBtnText">Bắt đầu ca</span>
+                </button>
+            </div>
+
+            <!-- 4 Key Percentage KPI Cards (2x2 Grid) -->
+            <div class="grid grid-cols-2 gap-2.5 shrink-0">
+                <!-- 1. Tỉ lệ hoàn thành -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                        <span>Hoàn thành</span>
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                    </div>
+                    <div class="my-1.5 flex items-baseline justify-between">
+                        <span id="pctCompletion" class="text-xl font-black text-slate-900">100.00%</span>
+                        <span id="rawCompletion" class="text-[10px] text-slate-400 font-medium">100%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div id="barCompletion" class="bg-emerald-500 h-full transition-all duration-300" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <!-- 2. Tỉ lệ nhận chuyến -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                        <span>Nhận chuyến</span>
+                        <i class="fa-solid fa-hand-holding-hand text-blue-500"></i>
+                    </div>
+                    <div class="my-1.5 flex items-baseline justify-between">
+                        <span id="pctAccept" class="text-xl font-black text-slate-900">100.00%</span>
+                        <span id="rawAccept" class="text-[10px] text-slate-400 font-medium">100%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div id="barAccept" class="bg-blue-500 h-full transition-all duration-300" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <!-- 3. Tỉ lệ tài xế hủy -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                        <span>Tài xế hủy</span>
+                        <i class="fa-solid fa-ban text-rose-500"></i>
+                    </div>
+                    <div class="my-1.5 flex items-baseline justify-between">
+                        <span id="pctDriverCancel" class="text-xl font-black text-slate-900">0.00%</span>
+                        <span id="rawDriverCancel" class="text-[10px] text-slate-400 font-medium">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div id="barDriverCancel" class="bg-rose-500 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 4. Tỉ lệ khách hủy -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                        <span>Khách hủy</span>
+                        <i class="fa-solid fa-user-xmark text-amber-500"></i>
+                    </div>
+                    <div class="my-1.5 flex items-baseline justify-between">
+                        <span id="pctCustomerCancel" class="text-xl font-black text-slate-900">0.00%</span>
+                        <span id="rawCustomerCancel" class="text-[10px] text-slate-400 font-medium">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div id="barCustomerCancel" class="bg-amber-500 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOTAL INCOMING SUMMARY -->
+            <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">
+                        <i class="fa-solid fa-tower-broadcast"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-black text-slate-800 block">Tổng Phát Đến</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">Tự động = Trôi + Hoàn thành + Khách + Tài xế</span>
+                    </div>
+                </div>
+                <div class="text-lg font-black text-slate-900 px-4 py-1.5 bg-white border border-slate-200 rounded-xl min-w-[60px] text-center shadow-xs" id="valIncoming">0</div>
+            </div>
+
+            <!-- 4 LARGE TAP PANELS (2x2 Grid) -->
+            <div class="grid grid-cols-2 gap-2.5 shrink-0">
+                <!-- 1. TRÔI -->
+                <div onclick="updateCount('ignored', 1)" class="btn-touch relative bg-orange-50 border-2 border-orange-200 hover:border-orange-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-xs overflow-hidden">
+                    <button onclick="event.stopPropagation(); updateCount('ignored', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-orange-300 text-orange-600 flex items-center justify-center font-bold shadow-xs hover:bg-orange-100 active:scale-95">
+                        <i class="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <div class="flex justify-end items-center">
+                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700">Trôi</span>
+                    </div>
+                    <div class="my-2 text-center">
+                        <span class="text-3xl font-black text-orange-600 tracking-tight" id="valIgnored">0</span>
+                    </div>
+                </div>
+
+                <!-- 2. TÀI XẾ HỦY (Swapped with Hoàn thành) -->
+                <div onclick="updateCount('driverCancel', 1)" class="btn-touch relative bg-rose-50 border-2 border-rose-200 hover:border-rose-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-xs overflow-hidden">
+                    <button onclick="event.stopPropagation(); updateCount('driverCancel', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-rose-300 text-rose-600 flex items-center justify-center font-bold shadow-xs hover:bg-rose-100 active:scale-95">
+                        <i class="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <div class="flex justify-end items-center">
+                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700">Tài xế hủy</span>
+                    </div>
+                    <div class="my-2 text-center">
+                        <span class="text-3xl font-black text-rose-600 tracking-tight" id="valDriverCancel">0</span>
+                    </div>
+                </div>
+
+                <!-- 3. KHÁCH HỦY -->
+                <div onclick="updateCount('customerCancel', 1)" class="btn-touch relative bg-amber-50 border-2 border-amber-200 hover:border-amber-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-xs overflow-hidden">
+                    <button onclick="event.stopPropagation(); updateCount('customerCancel', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-amber-300 text-amber-600 flex items-center justify-center font-bold shadow-xs hover:bg-amber-100 active:scale-95">
+                        <i class="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <div class="flex justify-end items-center">
+                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Khách hủy</span>
+                    </div>
+                    <div class="my-2 text-center">
+                        <span class="text-3xl font-black text-amber-600 tracking-tight" id="valCustomerCancel">0</span>
+                    </div>
+                </div>
+
+                <!-- 4. HOÀN THÀNH (Swapped with Tài xế hủy) -->
+                <div onclick="updateCount('completed', 1)" class="btn-touch relative bg-emerald-50 border-2 border-emerald-200 hover:border-emerald-400 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer shadow-xs overflow-hidden">
+                    <button onclick="event.stopPropagation(); updateCount('completed', -1);" class="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white border border-emerald-300 text-emerald-600 flex items-center justify-center font-bold shadow-xs hover:bg-emerald-100 active:scale-95">
+                        <i class="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <div class="flex justify-end items-center">
+                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Hoàn thành</span>
+                    </div>
+                    <div class="my-2 text-center">
+                        <span class="text-3xl font-black text-emerald-600 tracking-tight" id="valCompleted">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HELPER TEXT -->
+            <div class="text-center text-[10px] text-slate-400 font-semibold pt-1">
+                Chạm để cộng cuốc tương ứng
+            </div>
+        </div>
+
+        <!-- TAB 2: CHƯƠNG TRÌNH THƯỞNG (BONUS PROGRAMS) -->
+        <div id="tabContentBonus" class="flex-1 flex flex-col min-h-0 hidden space-y-3">
+            <div class="flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="text-sm font-black text-slate-900">Chương trình thưởng</h3>
+                    <p class="text-[11px] text-slate-500 font-medium">Theo dõi mốc thưởng & điều kiện tỉ lệ</p>
+                </div>
+                <button onclick="openAddBonusModal()" class="btn-touch px-3 py-2 rounded-xl bg-amber-500 text-white text-xs font-extrabold shadow-sm flex items-center gap-1">
+                    <i class="fa-solid fa-plus"></i> Thêm chương trình
+                </button>
+            </div>
+
+            <div id="bonusProgramsContainer" class="space-y-3 flex-1 overflow-y-auto">
+                <!-- Render dynamically -->
+            </div>
+        </div>
+
+        <!-- TAB 4: TÍNH THU NHẬP & CHI PHÍ (EARNINGS) -->
+        <div id="tabContentEarnings" class="flex-1 flex flex-col min-h-0 hidden space-y-3">
+            <div class="flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="text-sm font-black text-slate-900">Thu nhập & Chi phí</h3>
+                    <p class="text-[11px] text-slate-500 font-medium">Tự động lưu theo ngày - có tính tiền cơm, xăng xe</p>
+                </div>
+                <div class="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-[10px] font-black flex items-center gap-1">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tự động lưu
+                </div>
+            </div>
+
+            <!-- Date Selector / Current Day View -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-3 shadow-xs shrink-0">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <span class="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                        <i class="fa-regular fa-calendar-days text-emerald-600"></i> Ngày: <span id="earningsDateLabel">Hôm nay</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-bold">Chạm ô để nhập</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <!-- Doanh thu chuyến -->
+                    <div onclick="setActiveEarningsField('revTrips')" id="cardRevTrips" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all">
+                        <span class="text-[10px] font-bold text-slate-500 block mb-1">Doanh thu cuốc xe</span>
+                        <div class="text-sm font-black text-emerald-600 truncate" id="valRevTrips">0đ</div>
+                    </div>
+                    <!-- Tiền thưởng thêm -->
+                    <div onclick="setActiveEarningsField('revBonus')" id="cardRevBonus" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all">
+                        <span class="text-[10px] font-bold text-slate-500 block mb-1">Thưởng & Khác</span>
+                        <div class="text-sm font-black text-amber-600 truncate" id="valRevBonus">0đ</div>
+                    </div>
+                    <!-- Tiền xăng xe -->
+                    <div onclick="setActiveEarningsField('expFuel')" id="cardExpFuel" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all">
+                        <span class="text-[10px] font-bold text-slate-500 block mb-1">Chi phí xăng xe</span>
+                        <div class="text-sm font-black text-rose-600 truncate" id="valExpFuel">0đ</div>
+                    </div>
+                    <!-- Tiền ăn uống / cơm -->
+                    <div onclick="setActiveEarningsField('expMeal')" id="cardExpMeal" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all">
+                        <span class="text-[10px] font-bold text-slate-500 block mb-1">Tiền cơm / Nước</span>
+                        <div class="text-sm font-black text-rose-600 truncate" id="valExpMeal">0đ</div>
+                    </div>
+                </div>
+
+                <!-- Chi phí khác tùy chỉnh -->
+                <div onclick="setActiveEarningsField('expOther')" id="cardExpOther" class="p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-500 block">Chi phí khác (Bảo dưỡng, gửi xe...)</span>
+                        <span class="text-xs font-black text-rose-600" id="valExpOther">0đ</span>
+                    </div>
+                    <i class="fa-solid fa-pen-to-square text-xs text-slate-400"></i>
+                </div>
+
+                <!-- NET REVENUE SUMMARY BOX -->
+                <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-3 text-white flex items-center justify-between shadow-md">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-300 block">THU NHẬP RÒNG (LỢI NHUẬN)</span>
+                        <span class="text-lg font-black text-emerald-400" id="valNetEarnings">0đ</span>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-wallet text-sm"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIRTUAL KEYPAD FOR EARNINGS -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs shrink-0">
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <span class="text-[10px] font-black text-slate-500 flex items-center gap-1">
+                        <i class="fa-regular fa-keyboard text-emerald-600"></i> Bàn phím nhập tiền cho: <strong id="activeFieldTitle" class="text-slate-900">Doanh thu cuốc xe</strong>
+                    </span>
+                    <button onclick="keypadClear()" class="text-[10px] font-extrabold text-rose-600 hover:underline">Xóa ô</button>
+                </div>
+                <div class="grid grid-cols-4 gap-1.5">
+                    <button onclick="keypadPress('1')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">1</button>
+                    <button onclick="keypadPress('2')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">2</button>
+                    <button onclick="keypadPress('3')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">3</button>
+                    <button onclick="keypadPress('000')" class="btn-touch py-2.5 bg-emerald-50 hover:bg-emerald-100 font-black text-emerald-700 rounded-xl text-xs shadow-xs border border-emerald-200">000</button>
+
+                    <button onclick="keypadPress('4')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">4</button>
+                    <button onclick="keypadPress('5')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">5</button>
+                    <button onclick="keypadPress('6')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">6</button>
+                    <button onclick="keypadPress('00')" class="btn-touch py-2.5 bg-emerald-50 hover:bg-emerald-100 font-black text-emerald-700 rounded-xl text-xs shadow-xs border border-emerald-200">00</button>
+
+                    <button onclick="keypadPress('7')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">7</button>
+                    <button onclick="keypadPress('8')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">8</button>
+                    <button onclick="keypadPress('9')" class="btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">9</button>
+                    <button onclick="keypadDelete()" class="btn-touch py-2.5 bg-rose-50 hover:bg-rose-100 font-black text-rose-700 rounded-xl text-xs shadow-xs border border-rose-200 flex items-center justify-center"><i class="fa-solid fa-delete-left"></i></button>
+
+                    <button onclick="keypadPress('0')" class="col-span-3 btn-touch py-2.5 bg-slate-100 hover:bg-slate-200 font-black text-slate-800 rounded-xl text-sm shadow-xs">0</button>
+                    <button onclick="keypadNextField()" class="btn-touch py-2.5 bg-emerald-600 hover:bg-emerald-700 font-black text-white rounded-xl text-xs shadow-xs flex items-center justify-center gap-1"><i class="fa-solid fa-arrow-down"></i> Tiếp</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- BOTTOM NAVIGATION MENU BAR -->
+    <nav class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-around shrink-0 shadow-lg z-40 fixed bottom-0 left-0 right-0 max-w-md mx-auto">
+        <button onclick="switchTab('rate')" id="navTabRate" class="btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]">
+            <i class="fa-solid fa-chart-pie text-base"></i>
+            <span>Tỉ lệ</span>
+        </button>
+        <button onclick="switchTab('bonus')" id="navTabBonus" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]">
+            <i class="fa-solid fa-gift text-base"></i>
+            <span>Thưởng</span>
+        </button>
+        <button onclick="switchTab('earnings')" id="navTabEarnings" class="btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]">
+            <i class="fa-solid fa-wallet text-base"></i>
+            <span>Thu nhập</span>
+        </button>
+    </nav>
+
+    <!-- MODAL: HISTORY LOGS -->
+    <div id="historyModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 w-full max-w-sm shadow-2xl my-auto max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between mb-3 shrink-0">
+                <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Lịch sử các ngày trước
+                </h3>
+                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-700 p-1">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            
+            <div id="historyLogsContainer" class="space-y-3 text-xs text-slate-700 font-medium overflow-y-auto flex-1 pr-1">
+                <!-- Rendered dynamically -->
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 shrink-0">
+                <button onclick="closeHistoryModal()" class="btn-touch w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD BONUS PROGRAM -->
+    <div id="bonusModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 w-full max-w-sm shadow-2xl my-auto max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between mb-3 shrink-0">
+                <h3 id="bonusModalTitle" class="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-gift text-amber-500"></i> Tạo chương trình thưởng
+                </h3>
+                <button onclick="closeAddBonusModal()" class="text-slate-400 hover:text-slate-700 p-1">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3 text-xs text-slate-700 font-medium overflow-y-auto flex-1 pr-1">
+                <div>
+                    <label class="font-extrabold text-slate-600 block mb-1">Tên chương trình:</label>
+                    <input type="text" id="inputBonusTitle" value="beBike - Thưởng Cuối Tuần" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="font-extrabold text-slate-600 block mb-1">Loại thưởng:</label>
+                        <select id="inputBonusType" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold focus:outline-none focus:border-amber-500">
+                            <option value="Thưởng ngày">Thưởng ngày</option>
+                            <option value="Thưởng tuần">Thưởng tuần</option>
+                            <option value="Thưởng sự kiện">Thưởng sự kiện</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="font-extrabold text-slate-600 block mb-1">Nhận tối thiểu (%):</label>
+                        <input type="number" id="inputReqAccept" value="90" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold text-center">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="font-extrabold text-slate-600 block mb-1">Hủy tối đa (%):</label>
+                    <input type="number" id="inputReqCancel" value="10" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold text-center">
+                </div>
+
+                <!-- Dynamic Milestones Section -->
+                <div class="border-t border-slate-200 pt-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="font-extrabold text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-trophy text-amber-500"></i> Danh sách mốc thưởng
+                        </label>
+                        <button type="button" onclick="addMilestoneRow()" class="px-2.5 py-1 bg-amber-50 border border-amber-300 text-amber-700 rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-xs">
+                            <i class="fa-solid fa-plus text-[10px]"></i> Thêm mốc
+                        </button>
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-semibold">Mốc sau phải có số cuốc lớn hơn mốc trước.</div>
+                    
+                    <div id="milestonesInputsContainer" class="space-y-2 mt-1">
+                        <!-- Milestone rows inserted dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 mt-4 pt-3 border-t border-slate-100 shrink-0">
+                <button onclick="closeAddBonusModal()" class="btn-touch py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">Hủy</button>
+                <button onclick="saveBonusProgram()" id="bonusModalSaveBtn" class="btn-touch py-2.5 rounded-xl bg-amber-500 text-white font-extrabold text-xs shadow-md">Tạo chương trình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PWA GUIDE -->
+<!-- ...পাশের existing code ... -->
+    <script>
+        let state = {
+            lastDate: new Date().toDateString(),
+            ignored: 0,        // Trôi
+            completed: 0,     // Hoàn thành
+            customerCancel: 0, // Khách hủy
+            driverCancel: 0,   // Tài xế hủy
+            roundingEnabled: true, // Mặc định bật
+            historyLogs: [],   // Lưu lịch sử các ngày trước
+            dailyEarnings: {}, // Lưu thu nhập theo ngày
+            bonusPrograms: [],
+            // Shift timer state
+            isShiftActive: false,
+            shiftStartTime: null,
+            elapsedSeconds: 0
+        };
+
+        let timerInterval = null;
+        let activeEarningsFieldKey = 'revTrips';
+        const earningsFieldLabels = {
+            revTrips: 'Doanh thu cuốc xe',
+            revBonus: 'Thưởng & Khác',
+            expFuel: 'Chi phí xăng xe',
+            expMeal: 'Tiền cơm / Nước',
+            expOther: 'Chi phí khác'
+        };
+
+        let editingBonusId = null;
+        let historyStack = [];
+        let toastTimeout = null;
+
+        function switchTab(tab) {
+            const tabRate = document.getElementById('tabContentRate');
+            const tabBonus = document.getElementById('tabContentBonus');
+            const tabEarnings = document.getElementById('tabContentEarnings');
+            const navRate = document.getElementById('navTabRate');
+            const navBonus = document.getElementById('navTabBonus');
+            const navEarnings = document.getElementById('navTabEarnings');
+
+            tabRate.classList.add('hidden'); tabRate.classList.remove('flex');
+            tabBonus.classList.add('hidden'); tabBonus.classList.remove('flex');
+            tabEarnings.classList.add('hidden'); tabEarnings.classList.remove('flex');
+
+            navRate.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
+            navBonus.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
+            navEarnings.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
+
+            if (tab === 'rate') {
+                tabRate.classList.remove('hidden'); tabRate.classList.add('flex');
+                navRate.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
+            } else if (tab === 'bonus') {
+                tabBonus.classList.remove('hidden'); tabBonus.classList.add('flex');
+                navBonus.className = 'btn-touch flex flex-col items-center gap-1 text-amber-600 font-extrabold text-[11px]';
+                renderBonusPrograms();
+            } else if (tab === 'earnings') {
+                tabEarnings.classList.remove('hidden'); tabEarnings.classList.add('flex');
+                navEarnings.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
+                renderEarningsView();
+            }
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('driver_app_state_v3');
+            if (saved) {
+                try { 
+                    state = JSON.parse(saved); 
+                } catch (e) {}
+            } else {
+                state.completed = 0;
+                state.customerCancel = 0;
+                state.driverCancel = 0;
+                state.ignored = 0;
+            }
+
+            if (!state.dailyEarnings) state.dailyEarnings = {};
+
+            // Kiểm tra xem đã sang ngày mới chưa
+            const currentDateStr = new Date().toDateString();
+            if (!state.lastDate) {
+                state.lastDate = currentDateStr;
+            } else if (state.lastDate !== currentDateStr) {
+                // Sang ngày mới: Lưu log ngày cũ vào historyLogs và reset các chỉ số về 0
+                const oldLog = {
+                    date: state.lastDate,
+                    ignored: state.ignored,
+                    completed: state.completed,
+                    customerCancel: state.customerCancel,
+                    driverCancel: state.driverCancel,
+                    earnings: state.dailyEarnings[state.lastDate] || { revTrips: 0, revBonus: 0, expFuel: 0, expMeal: 0, expOther: 0 }
+                };
+                if (!state.historyLogs) state.historyLogs = [];
+                state.historyLogs.unshift(oldLog);
+
+                // Reset bộ đếm cuốc cho ngày mới và dừng ca làm việc cũ
+                state.ignored = 0;
+                state.completed = 0;
+                state.customerCancel = 0;
+                state.driverCancel = 0;
+                state.isShiftActive = false;
+                state.shiftStartTime = null;
+                state.elapsedSeconds = 0;
+                state.lastDate = currentDateStr;
+                saveState();
+            }
+
+            // Resume timer if it was active
+            if (state.isShiftActive) {
+                if (state.shiftStartTime) {
+                    const now = Date.now();
+                    const diffSec = Math.floor((now - state.shiftStartTime) / 1000);
+                    state.elapsedSeconds = (state.elapsedSeconds || 0) + diffSec;
+                    state.shiftStartTime = now;
+                }
+                startTimerInterval();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('driver_app_state_v3', JSON.stringify(state));
+        }
+
+        function toggleShiftTimer() {
+            state.isShiftActive = !state.isShiftActive;
+            if (state.isShiftActive) {
+                state.shiftStartTime = Date.now();
+                startTimerInterval();
+                showToast('Đã bắt đầu tính thời gian chạy!');
+            } else {
+                if (timerInterval) clearInterval(timerInterval);
+                state.shiftStartTime = null;
+                showToast('Đã tạm dừng thời gian chạy!');
+            }
+            saveState();
+            updateTimerUI();
+        }
+
+        function startTimerInterval() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                state.elapsedSeconds = (state.elapsedSeconds || 0) + 1;
+                saveState();
+                updateTimerUI();
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const secTotal = state.elapsedSeconds || 0;
+            const h = Math.floor(secTotal / 3600);
+            const m = Math.floor((secTotal % 3600) / 60);
+            const s = secTotal % 60;
+            
+            const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            const dispEl = document.getElementById('timerDisplay');
+            if (dispEl) dispEl.textContent = timeStr;
+
+            const btn = document.getElementById('timerToggleBtn');
+            const btnIcon = document.getElementById('timerBtnIcon');
+            const btnText = document.getElementById('timerBtnText');
+            const iconBg = document.getElementById('timerIconBg');
+
+            if (state.isShiftActive) {
+                if (btn) btn.className = 'btn-touch px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all';
+                if (btnIcon) btnIcon.className = 'fa-solid fa-pause text-xs';
+                if (btnText) btnText.textContent = 'Dừng ca';
+                if (iconBg) iconBg.className = 'w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm shadow-xs transition-all animate-pulse';
+            } else {
+                if (btn) btn.className = 'btn-touch px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-sm flex items-center gap-1.5 transition-all';
+                if (btnIcon) btnIcon.className = 'fa-solid fa-play text-xs';
+                if (btnText) btnText.textContent = 'Bắt đầu ca';
+                if (iconBg) iconBg.className = 'w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shadow-xs transition-all';
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('driver_app_state_v3', JSON.stringify(state));
+        }
+
+        function getTodayEarningsRecord() {
+            const dateKey = state.lastDate || new Date().toDateString();
+            if (!state.dailyEarnings) state.dailyEarnings = {};
+            if (!state.dailyEarnings[dateKey]) {
+                state.dailyEarnings[dateKey] = { revTrips: 0, revBonus: 0, expFuel: 0, expMeal: 0, expOther: 0 };
+            }
+            return state.dailyEarnings[dateKey];
+        }
+
+        function setActiveEarningsField(key) {
+            activeEarningsFieldKey = key;
+            document.getElementById('activeFieldTitle').textContent = earningsFieldLabels[key];
+            
+            // Highlight active card
+            ['revTrips', 'revBonus', 'expFuel', 'expMeal', 'expOther'].forEach(k => {
+                const el = document.getElementById('card' + k.charAt(0).toUpperCase() + k.slice(1));
+                if (el) {
+                    if (k === key) {
+                        el.className = 'p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/50 cursor-pointer transition-all shadow-xs';
+                    } else {
+                        el.className = 'p-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 cursor-pointer transition-all';
+                    }
+                }
+            });
+        }
+
+        function keypadPress(val) {
+            const rec = getTodayEarningsRecord();
+            let currentValStr = String(rec[activeEarningsFieldKey] || 0);
+            if (currentValStr === '0') {
+                currentValStr = val;
+            } else {
+                currentValStr += val;
+            }
+            rec[activeEarningsFieldKey] = parseInt(currentValStr) || 0;
+            saveState();
+            renderEarningsView();
+        }
+
+        function keypadDelete() {
+            const rec = getTodayEarningsRecord();
+            let currentValStr = String(rec[activeEarningsFieldKey] || 0);
+            if (currentValStr.length <= 1) {
+                rec[activeEarningsFieldKey] = 0;
+            } else {
+                currentValStr = currentValStr.slice(0, -1);
+                rec[activeEarningsFieldKey] = parseInt(currentValStr) || 0;
+            }
+            saveState();
+            renderEarningsView();
+        }
+
+        function keypadClear() {
+            const rec = getTodayEarningsRecord();
+            rec[activeEarningsFieldKey] = 0;
+            saveState();
+            renderEarningsView();
+        }
+
+        function keypadNextField() {
+            const fields = ['revTrips', 'revBonus', 'expFuel', 'expMeal', 'expOther'];
+            const idx = fields.indexOf(activeEarningsFieldKey);
+            const nextIdx = (idx + 1) % fields.length;
+            setActiveEarningsField(fields[nextIdx]);
+        }
+
+        function renderEarningsView() {
+            const rec = getTodayEarningsRecord();
+            document.getElementById('earningsDateLabel').textContent = state.lastDate || 'Hôm nay';
+            
+            document.getElementById('valRevTrips').textContent = (rec.revTrips || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('valRevBonus').textContent = (rec.revBonus || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('valExpFuel').textContent = (rec.expFuel || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('valExpMeal').textContent = (rec.expMeal || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('valExpOther').textContent = (rec.expOther || 0).toLocaleString('vi-VN') + 'đ';
+
+            const totalRev = (rec.revTrips || 0) + (rec.revBonus || 0);
+            const totalExp = (rec.expFuel || 0) + (rec.expMeal || 0) + (rec.expOther || 0);
+            const net = totalRev - totalExp;
+
+            const netEl = document.getElementById('valNetEarnings');
+            netEl.textContent = net.toLocaleString('vi-VN') + 'đ';
+            if (net < 0) {
+                netEl.className = 'text-lg font-black text-rose-400';
+            } else {
+                netEl.className = 'text-lg font-black text-emerald-400';
+            }
+        }
+
+        function pushHistory() {
+            historyStack.push({
+                ignored: state.ignored,
+                completed: state.completed,
+                customerCancel: state.customerCancel,
+                driverCancel: state.driverCancel
+            });
+            if (historyStack.length > 30) historyStack.shift();
+        }
+
+        function undo() {
+            if (historyStack.length === 0) {
+                showToast('Không có thao tác để hoàn tác!');
+                return;
+            }
+            const last = historyStack.pop();
+            state.ignored = last.ignored;
+            state.completed = last.completed;
+            state.customerCancel = last.customerCancel;
+            state.driverCancel = last.driverCancel;
+            saveState();
+            render();
+            showToast('Đã hoàn tác thao tác trước');
+        }
+
+        function resetAll() {
+            pushHistory();
+            state.ignored = 0;
+            state.completed = 0;
+            state.customerCancel = 0;
+            state.driverCancel = 0;
+            saveState();
+            render();
+            showToast('Đã đặt lại toàn bộ');
+        }
+
+        function getIncoming() {
+            return state.ignored + state.completed + state.customerCancel + state.driverCancel;
+        }
+
+        function updateCount(type, delta) {
+            pushHistory();
+            if (delta > 0) {
+                state[type] += delta;
+            } else {
+                if (state[type] > 0) {
+                    state[type] += delta;
+                } else {
+                    historyStack.pop();
+                    showToast('Số lượng đã bằng 0!');
+                    return;
+                }
+            }
+            saveState();
+            render();
+        }
+
+        function toggleRounding() {
+            state.roundingEnabled = !state.roundingEnabled;
+            saveState();
+            render();
+            showToast(state.roundingEnabled ? 'Đã bật làm tròn trần' : 'Đã tắt làm tròn trần');
+        }
+
+        function customCeil(val) {
+            if (!state.roundingEnabled) return val.toFixed(2);
+            return Math.ceil(val).toString();
+        }
+
+        function render() {
+            const incoming = getIncoming();
+            document.getElementById('valIncoming').textContent = incoming;
+            document.getElementById('valIgnored').textContent = state.ignored;
+            document.getElementById('valCompleted').textContent = state.completed;
+            document.getElementById('valCustomerCancel').textContent = state.customerCancel;
+            document.getElementById('valDriverCancel').textContent = state.driverCancel;
+
+            const btnR = document.getElementById('roundingBtn');
+            const txtR = document.getElementById('roundingText');
+            if (state.roundingEnabled) {
+                btnR.className = 'px-2.5 py-1.5 rounded-xl border text-[11px] font-extrabold flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border-emerald-300 shadow-xs';
+                txtR.textContent = 'Làm tròn: Bật';
+            } else {
+                btnR.className = 'px-2.5 py-1.5 rounded-xl border text-[11px] font-extrabold flex items-center gap-1.5 bg-slate-100 text-slate-600 border-slate-300 shadow-xs';
+                txtR.textContent = 'Làm tròn: Tắt';
+            }
+
+            const denomCompletion = incoming - state.customerCancel;
+            let rawCompletionVal = denomCompletion > 0 ? (state.completed / denomCompletion) * 100 : 100;
+            if (rawCompletionVal > 100) rawCompletionVal = 100;
+
+            let rawAcceptVal = incoming > 0 ? ((incoming - state.ignored) / incoming) * 100 : 100;
+            const totalAccepted = incoming - state.ignored;
+            let rawDriverCancelVal = totalAccepted > 0 ? (state.driverCancel / totalAccepted) * 100 : 0;
+            let rawCustomerCancelVal = incoming > 0 ? (state.customerCancel / incoming) * 100 : 0;
+
+            document.getElementById('rawCompletion').textContent = rawCompletionVal.toFixed(1) + '%';
+            document.getElementById('rawAccept').textContent = rawAcceptVal.toFixed(1) + '%';
+            document.getElementById('rawDriverCancel').textContent = rawDriverCancelVal.toFixed(1) + '%';
+            document.getElementById('rawCustomerCancel').textContent = rawCustomerCancelVal.toFixed(1) + '%';
+
+            document.getElementById('pctCompletion').textContent = state.roundingEnabled ? Math.ceil(rawCompletionVal) + '%' : rawCompletionVal.toFixed(2) + '%';
+            document.getElementById('pctAccept').textContent = state.roundingEnabled ? Math.ceil(rawAcceptVal) + '%' : rawAcceptVal.toFixed(2) + '%';
+            document.getElementById('pctDriverCancel').textContent = state.roundingEnabled ? Math.ceil(rawDriverCancelVal) + '%' : rawDriverCancelVal.toFixed(2) + '%';
+            document.getElementById('pctCustomerCancel').textContent = state.roundingEnabled ? Math.ceil(rawCustomerCancelVal) + '%' : rawCustomerCancelVal.toFixed(2) + '%';
+
+            document.getElementById('barCompletion').style.width = rawCompletionVal + '%';
+            document.getElementById('barAccept').style.width = rawAcceptVal + '%';
+            document.getElementById('barDriverCancel').style.width = rawDriverCancelVal + '%';
+            document.getElementById('barCustomerCancel').style.width = rawCustomerCancelVal + '%';
+
+            if (document.getElementById('tabContentBonus').classList.contains('flex')) {
+                renderBonusPrograms();
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.opacity = '1';
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                t.style.opacity = '0';
+            }, 2000);
+        }
+
+        function openHistoryModal() {
+            const container = document.getElementById('historyLogsContainer');
+            if (state.historyLogs && state.historyLogs.length > 0) {
+                container.innerHTML = state.historyLogs.map(log => {
+                    const totalInc = log.ignored + log.completed + log.customerCancel + log.driverCancel;
+                    const denom = totalInc - log.customerCancel;
+                    const compPct = denom > 0 ? ((log.completed / denom) * 100).toFixed(1) : '100.0';
+                    const accPct = totalInc > 0 ? (((totalInc - log.ignored) / totalInc) * 100).toFixed(1) : '100.0';
+                    
+                    const earn = log.earnings || { revTrips: 0, revBonus: 0, expFuel: 0, expMeal: 0, expOther: 0 };
+                    const totRev = (earn.revTrips || 0) + (earn.revBonus || 0);
+                    const totExp = (earn.expFuel || 0) + (earn.expMeal || 0) + (earn.expOther || 0);
+                    const netEarn = totRev - totExp;
+
+                    return `
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                                <span class="font-black text-slate-900"><i class="fa-regular fa-calendar text-emerald-600 mr-1"></i> ${log.date}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Đã lưu</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600 font-semibold">
+                                <div>Hoàn thành: <strong class="text-slate-900">${log.completed}</strong> cuốc</div>
+                                <div>Thu nhập ròng: <strong class="text-emerald-600">${netEarn.toLocaleString('vi-VN')}đ</strong></div>
+                            </div>
+                            <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[10px] font-extrabold text-slate-500">
+                                <span>Tỉ lệ HT: ${compPct}%</span>
+                                <span>Tỉ lệ Nhận: ${accPct}%</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 font-medium">
+                        <i class="fa-solid fa-box-archive text-2xl mb-2 text-slate-300"></i>
+                        <p class="text-xs">Chưa có lịch sử ngày cũ được lưu.</p>
+                    </div>
+                `;
+            }
+            document.getElementById('historyModal').classList.remove('hidden');
+            document.getElementById('historyModal').classList.add('flex');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.add('hidden');
+            document.getElementById('historyModal').classList.remove('flex');
+        }
+
+        function openAddBonusModal(programId = null) {
+            editingBonusId = programId;
+            const modal = document.getElementById('bonusModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const titleEl = document.getElementById('bonusModalTitle');
+            const saveBtn = document.getElementById('bonusModalSaveBtn');
+            const container = document.getElementById('milestonesInputsContainer');
+
+            if (programId) {
+                titleEl.innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-500"></i> Sửa chương trình thưởng`;
+                saveBtn.textContent = 'Lưu thay đổi';
+                const prog = state.bonusPrograms.find(p => p.id === programId);
+                if (prog) {
+                    document.getElementById('inputBonusTitle').value = prog.title;
+                    document.getElementById('inputBonusType').value = prog.type;
+                    document.getElementById('inputReqAccept').value = prog.reqAccept;
+                    document.getElementById('inputReqCancel').value = prog.reqCancel;
+                    
+                    container.innerHTML = prog.milestones.map(m => `
+                        <div class="milestone-row flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <div class="flex-1">
+                                <label class="text-[10px] font-bold text-slate-500 block">Số cuốc</label>
+                                <input type="number" value="${m.trips}" class="m-trips w-full px-2 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-xs">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-[10px] font-bold text-slate-500 block">Thưởng (VNĐ)</label>
+                                <input type="number" value="${m.bonus}" step="5000" class="m-bonus w-full px-2 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-xs">
+                            </div>
+                            <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-rose-600 p-2 mt-3">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                titleEl.innerHTML = `<i class="fa-solid fa-gift text-amber-500"></i> Tạo chương trình thưởng`;
+                saveBtn.textContent = 'Tạo chương trình';
+                document.getElementById('inputBonusTitle').value = 'beBike - Thưởng Cuối Tuần';
+                document.getElementById('inputReqAccept').value = 90;
+                document.getElementById('inputReqCancel').value = 10;
+                container.innerHTML = `
+                    <div class="milestone-row flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <div class="flex-1">
+                            <label class="text-[10px] font-bold text-slate-500 block">Số cuốc</label>
+                            <input type="number" value="3" class="m-trips w-full px-2 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-xs">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-[10px] font-bold text-slate-500 block">Thưởng (VNĐ)</label>
+                            <input type="number" value="10000" step="5000" class="m-bonus w-full px-2 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-xs">
+                        </div>
+                    </div>
+                    <div class="milestone-row flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <div class="flex-1">
+                            <label class="text-[10px] font-bold text-slate-500 block">Số cuốc</label>
+                            <input type="number" value="6" class="m-trips w-full px-2 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-xs">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-[10px] font-bold text-slate-500 block">Thưởng (VNĐ)</label>
+                            <input type="number" value="25000" step="5000" class="m-bonus w-full px-2 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-xs">
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function closeAddBonusModal() {
+            editingBonusId = null;
+            document.getElementById('bonusModal').classList.add('hidden');
+            document.getElementById('bonusModal').classList.remove('flex');
+        }
+
+        function addMilestoneRow() {
+            const container = document.getElementById('milestonesInputsContainer');
+            const div = document.createElement('div');
+            div.className = 'milestone-row flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200';
+            div.innerHTML = `
+                <div class="flex-1">
+                    <label class="text-[10px] font-bold text-slate-500 block">Số cuốc</label>
+                    <input type="number" value="10" class="m-trips w-full px-2 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-xs">
+                </div>
+                <div class="flex-1">
+                    <label class="text-[10px] font-bold text-slate-500 block">Thưởng (VNĐ)</label>
+                    <input type="number" value="50000" step="5000" class="m-bonus w-full px-2 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-xs">
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-rose-600 p-2 mt-3">
+                    <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        function saveBonusProgram() {
+            const title = document.getElementById('inputBonusTitle').value.trim() || 'Chương trình thưởng';
+            const type = document.getElementById('inputBonusType').value || 'Thưởng ngày';
+            const reqAccept = parseInt(document.getElementById('inputReqAccept').value) || 90;
+            const reqCancel = parseInt(document.getElementById('inputReqCancel').value) || 10;
+
+            const rows = document.querySelectorAll('#milestonesInputsContainer .milestone-row');
+            const milestones = [];
+            rows.forEach(row => {
+                const trips = parseInt(row.querySelector('.m-trips').value) || 0;
+                const bonus = parseInt(row.querySelector('.m-bonus').value) || 0;
+                if (trips > 0) {
+                    milestones.push({ trips, bonus });
+                }
+            });
+
+            if (milestones.length === 0) {
+                showToast('Vui lòng thêm ít nhất 1 mốc thưởng hợp lệ!');
+                return;
+            }
+
+            milestones.sort((a, b) => a.trips - b.trips);
+
+            for (let i = 1; i < milestones.length; i++) {
+                if (milestones[i].trips <= milestones[i - 1].trips) {
+                    showToast('Lỗi: Số cuốc mốc sau phải lớn hơn mốc trước!');
+                    return;
+                }
+            }
+
+            if (editingBonusId) {
+                const prog = state.bonusPrograms.find(p => p.id === editingBonusId);
+                if (prog) {
+                    prog.title = title;
+                    prog.type = type;
+                    prog.milestones = milestones;
+                    prog.reqAccept = reqAccept;
+                    prog.reqCancel = reqCancel;
+                }
+                showToast('Đã cập nhật chương trình thưởng');
+            } else {
+                state.bonusPrograms.push({
+                    id: Date.now(),
+                    title: title,
+                    type: type,
+                    milestones: milestones,
+                    reqAccept: reqAccept,
+                    reqCancel: reqCancel,
+                    activeMilestoneOpen: 0
+                });
+                showToast('Đã thêm chương trình thưởng mới');
+            }
+
+            saveState();
+            closeAddBonusModal();
+            renderBonusPrograms();
+        }
+
+        function deleteBonusProgram(idx) {
+            state.bonusPrograms.splice(idx, 1);
+            saveState();
+            renderBonusPrograms();
+            showToast('Đã xóa chương trình thưởng');
+        }
+
+        function renderBonusPrograms() {
+            const container = document.getElementById('bonusProgramsContainer');
+            if (!container) return;
+
+            const completedTrips = state.completed;
+            const incoming = getIncoming();
+            const denomCompletion = incoming - state.customerCancel;
+            const totalAcceptedTrips = incoming - state.ignored;
+            let rawAcceptVal = incoming > 0 ? (totalAcceptedTrips / incoming) * 100 : 100;
+            let rawDriverCancelVal = totalAcceptedTrips > 0 ? (state.driverCancel / totalAcceptedTrips) * 100 : 0;
+
+            const intAccept = state.roundingEnabled ? Math.ceil(rawAcceptVal) : Math.round(rawAcceptVal);
+            const intCancel = state.roundingEnabled ? Math.ceil(rawDriverCancelVal) : Math.round(rawDriverCancelVal);
+
+            if (state.bonusPrograms.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 text-center text-slate-400">
+                        <i class="fa-solid fa-gift text-2xl mb-2 text-slate-300"></i>
+                        <p class="text-xs font-bold">Chưa có chương trình thưởng nào.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = state.bonusPrograms.map((prog, pIdx) => {
+                const maxTrips = prog.milestones[prog.milestones.length - 1].trips;
+                
+                let nextMilestone = prog.milestones.find(m => completedTrips < m.trips);
+                let targetTripsForBar = nextMilestone ? nextMilestone.trips : maxTrips;
+                let prevMilestoneTrips = 0;
+                
+                if (nextMilestone) {
+                    const mIdx = prog.milestones.indexOf(nextMilestone);
+                    if (mIdx > 0) {
+                        prevMilestoneTrips = prog.milestones[mIdx - 1].trips;
+                    }
+                } else {
+                    prevMilestoneTrips = prog.milestones.length > 1 ? prog.milestones[prog.milestones.length - 2].trips : 0;
+                }
+
+                const progressPct = Math.min(100, Math.max(0, (completedTrips / targetTripsForBar) * 100));
+
+                const acceptValid = intAccept >= prog.reqAccept;
+                const cancelValid = intCancel <= prog.reqCancel;
+
+                let progressStatusText = '';
+                if (nextMilestone) {
+                    const remaining = nextMilestone.trips - completedTrips;
+                    const bonusFormatted = nextMilestone.bonus.toLocaleString('vi-VN') + 'đ';
+                    
+                    const totalMinutes = Math.round((remaining / 3) * 60);
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+                    
+                    let timeStr = '';
+                    if (hours > 0 && minutes > 0) {
+                        timeStr = `${hours}h${minutes}p`;
+                    } else if (hours > 0) {
+                        timeStr = `${hours}h`;
+                    } else {
+                        timeStr = `${minutes}p`;
+                    }
+
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() + totalMinutes);
+                    const finishHour = String(now.getHours()).padStart(2, '0');
+                    const finishMinute = String(now.getMinutes()).padStart(2, '0');
+
+                    progressStatusText = `Còn <strong class="font-black text-slate-900">${remaining}</strong> cuốc để đạt mốc <strong class="font-black text-slate-900">${bonusFormatted}</strong> (<strong class="font-black">${timeStr}</strong> - dự kiến hoàn thành lúc <strong class="font-black">${finishHour}h${finishMinute}</strong>)`;
+                } else {
+                    progressStatusText = `Đã hoàn thành tất cả mốc thưởng! 🎉`;
+                }
+
+                let adviceLine = '';
+                if (!acceptValid) {
+                    const reqRatio = prog.reqAccept / 100;
+                    const neededAccept = Math.ceil((reqRatio * incoming - totalAcceptedTrips) / (1 - reqRatio));
+                    if (neededAccept > 0) {
+                        const totalMinutesRate = Math.round((neededAccept / 3) * 60);
+                        const hoursRate = Math.floor(totalMinutesRate / 60);
+                        const minutesRate = totalMinutesRate % 60;
+                        let timeStrRate = '';
+                        if (hoursRate > 0 && minutesRate > 0) {
+                            timeStrRate = `${hoursRate}h${minutesRate}p`;
+                        } else if (hoursRate > 0) {
+                            timeStrRate = `${hoursRate}h`;
+                        } else {
+                            timeStrRate = `${minutesRate}p`;
+                        }
+
+                        const nowRate = new Date();
+                        nowRate.setMinutes(nowRate.getMinutes() + totalMinutesRate);
+                        const finishHourRate = String(nowRate.getHours()).padStart(2, '0');
+                        const finishMinuteRate = String(nowRate.getMinutes()).padStart(2, '0');
+
+                        adviceLine = `Cố gắng chạy thêm <strong class="font-black text-slate-900">${neededAccept}</strong> cuốc không hủy để đủ tỉ lệ nhận thưởng (<strong class="font-black">${timeStrRate}</strong> - dự kiến hoàn thành lúc <strong class="font-black">${finishHourRate}h${finishMinuteRate}</strong>)`;
+                    }
+                } else if (!cancelValid) {
+                    const reqCancelRatio = prog.reqCancel / 100;
+                    const neededCompleteWithoutCancel = Math.ceil((state.driverCancel / reqCancelRatio) - totalAcceptedTrips);
+                    if (neededCompleteWithoutCancel > 0) {
+                        const totalMinutesRate = Math.round((neededCompleteWithoutCancel / 3) * 60);
+                        const hoursRate = Math.floor(totalMinutesRate / 60);
+                        const minutesRate = totalMinutesRate % 60;
+                        let timeStrRate = '';
+                        if (hoursRate > 0 && minutesRate > 0) {
+                            timeStrRate = `${hoursRate}h${minutesRate}p`;
+                        } else if (hoursRate > 0) {
+                            timeStrRate = `${hoursRate}h`;
+                        } else {
+                            timeStrRate = `${minutesRate}p`;
+                        }
+
+                        const nowRate = new Date();
+                        nowRate.setMinutes(nowRate.getMinutes() + totalMinutesRate);
+                        const finishHourRate = String(nowRate.getHours()).padStart(2, '0');
+                        const finishMinuteRate = String(nowRate.getMinutes()).padStart(2, '0');
+
+                        adviceLine = `Cố gắng chạy thêm <strong class="font-black text-slate-900">${neededCompleteWithoutCancel}</strong> cuốc không hủy để đủ tỉ lệ nhận thưởng (<strong class="font-black">${timeStrRate}</strong> - dự kiến hoàn thành lúc <strong class="font-black">${finishHourRate}h${finishMinuteRate}</strong>)`;
+                    }
+                }
+
+                return `
+                    <div class="bg-white border border-slate-200 shadow-xs rounded-2xl p-4 space-y-3.5">
+                        <div class="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                            <div>
+                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">${prog.type}</span>
+                                <h4 class="text-xs font-black text-slate-900 mt-1">${prog.title}</h4>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button onclick="openAddBonusModal(${prog.id})" class="text-slate-400 hover:text-amber-600 p-1">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button onclick="deleteBonusProgram(${pIdx})" class="text-slate-400 hover:text-rose-600 p-1">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- DIV 1: PROGRESS BAR & MILESTONES -->
+                        <div class="pt-6 pb-6 px-2">
+                            <div class="ml-2 mr-4 relative bg-slate-100 h-2.5 rounded-full overflow-visible">
+                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: ${Math.min(100, (completedTrips / maxTrips) * 100)}%"></div>
+                                ${!prog.milestones.some(m => m.trips === completedTrips) ? `
+                                <div class="absolute -top-7 -translate-x-1/2 flex flex-col items-center z-20 transition-all duration-300" style="left: ${Math.min(100, (completedTrips / maxTrips) * 100)}%">
+                                    <div class="relative w-6 h-7 bg-white border-2 border-slate-900 rounded-t-full rounded-b-full flex items-center justify-center text-slate-900 text-[10px] font-black shadow-md">
+                                        <span class="relative z-10 -top-0.5">${completedTrips}</span>
+                                        <div class="absolute -bottom-1 w-2 h-2 bg-slate-900 rotate-45"></div>
+                                    </div>
+                                </div>
+                                ` : ''}
+                                ${prog.milestones.map((m) => {
+                                    const reached = completedTrips >= m.trips;
+                                    const mPct = Math.min(100, (m.trips / maxTrips) * 100);
+                                    return `
+                                        <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center z-10" style="left: ${mPct}%">
+                                            <div class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-xs border-2 transition-all ${reached ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-white border-slate-300 text-slate-700'}">
+                                                ${m.trips}
+                                            </div>
+                                            <div class="absolute top-7 whitespace-nowrap text-[10px] font-black px-1.5 py-0.5 rounded shadow-2xs border ${reached ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-white text-slate-700 border-slate-200'}">
+                                                ${m.bonus >= 1000 ? (m.bonus / 1000) + 'K' : m.bonus}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- DIV 2: STATUS MESSAGE -->
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-2.5 text-xs font-semibold text-slate-700">
+                            ${progressStatusText}
+                        </div>
+
+                        <!-- DIV 3: CONDITIONS TABLE -->
+                        <div class="border border-slate-200 rounded-xl overflow-hidden text-xs shadow-2xs">
+                            <div class="flex items-center justify-between px-3 py-2.5 bg-slate-50 border-b border-slate-200 font-bold text-slate-700">
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-hand-holding-hand text-blue-500"></i> Nhận chuyến</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-slate-500">&gt;=${prog.reqAccept}%</span>
+                                    <span class="font-black ${acceptValid ? 'text-emerald-600' : 'text-rose-600'}">
+                                        ${intAccept}% ${acceptValid ? '✓' : '✕'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between px-3 py-2.5 bg-white font-bold text-slate-700">
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-ban text-rose-500"></i> Hủy chuyến</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-slate-500">&lt;=${prog.reqCancel}%</span>
+                                    <span class="font-black ${cancelValid ? 'text-emerald-600' : 'text-rose-600'}">
+                                        ${intCancel}% ${cancelValid ? '✓' : '✕'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DIV 4: ADVICE WARNING -->
+                        ${adviceLine ? `
+                            <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-xs font-semibold text-amber-800 flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                                <div>${adviceLine}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.onload = function() {
+            loadState();
+            render();
+            updateTimerUI();
+            switchTab('rate');
+        };
+    </script>
+</body>
+</html>
