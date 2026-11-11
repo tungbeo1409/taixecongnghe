@@ -1,0 +1,15 @@
+{
+  "name": "Cuốc xe",
+  "short_name": "Cuốc xe",
+  "description": "Bộ đếm cuốc xe cho tài xế công nghệ",
+  "lang": "vi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101a2b",
+  "theme_color": "#101a2b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

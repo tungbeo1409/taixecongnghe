@@ -1,1 +1,246 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101a2b">
+  <meta name="description" content="Bộ đếm cuốc xe gọn nhẹ cho tài xế công nghệ.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>Cuốc xe</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101a2b;
+      --panel: #19263a;
+      --panel-soft: #202f45;
+      --text: #f5f7fb;
+      --muted: #9cacc1;
+      --line: #304158;
+      --mint: #55e0b0;
+      --blue: #70a9ff;
+      --amber: #ffc96b;
+      --red: #ff818b;
+      --purple: #c19bff;
+      --radius: 20px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: max(18px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+      background: radial-gradient(ellipse at 50% -20%, #243957 0, var(--bg) 58%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    main { width: min(100%, 520px); margin: 0 auto; }
+    header { display: flex; align-items: center; justify-content: space-between; margin: 2px 2px 16px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px; background: #243a52; color: var(--mint); font-size: 21px; }
+    h1 { margin: 0; font-size: 19px; letter-spacing: -.4px; }
+    .subhead { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+    button { color: inherit; font: inherit; cursor: pointer; touch-action: manipulation; }
+    .icon-button {
+      min-width: 46px; min-height: 46px; border: 1px solid var(--line); border-radius: 14px;
+      background: #18263a; color: var(--muted); font-size: 19px;
+    }
+    .hero {
+      position: relative; overflow: hidden; padding: 20px; border: 1px solid #335047;
+      border-radius: var(--radius); background: linear-gradient(135deg, #1d3d3b, #192e3d 72%);
+    }
+    .hero::after { content: ""; position: absolute; width: 170px; height: 170px; right: -65px; top: -90px; border: 1px solid #ffffff12; border-radius: 50%; box-shadow: 0 0 0 22px #ffffff08, 0 0 0 44px #ffffff05; }
+    .hero-label { color: #b6d9cd; font-size: 13px; }
+    .hero-value { margin-top: 5px; font-size: clamp(42px, 13vw, 58px); font-weight: 750; line-height: 1.05; letter-spacing: -2px; color: var(--mint); }
+    .hero-value small { font-size: 25px; letter-spacing: 0; }
+    .hero-foot { display: flex; justify-content: space-between; align-items: end; gap: 8px; margin-top: 12px; color: #c3d6d3; font-size: 12px; }
+    .hero-foot strong { color: var(--text); font-size: 15px; }
+    .section-title { margin: 21px 3px 9px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase; }
+    .rows { display: grid; gap: 9px; }
+    .row {
+      --tone: var(--blue);
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 12px;
+      min-height: 91px; padding: 12px 12px 11px 15px; border: 1px solid var(--line);
+      border-radius: 17px; background: var(--panel);
+    }
+    .row[data-key="received"] { --tone: var(--blue); }
+    .row[data-key="dropped"] { --tone: var(--amber); }
+    .row[data-key="completed"] { --tone: var(--mint); }
+    .row[data-key="customerCancelled"] { --tone: var(--purple); }
+    .row[data-key="driverCancelled"] { --tone: var(--red); }
+    .row-main { min-width: 0; }
+    .row-title { display: flex; gap: 7px; align-items: center; font-size: 14px; font-weight: 650; white-space: nowrap; }
+    .dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--tone); box-shadow: 0 0 12px color-mix(in srgb, var(--tone), transparent 55%); }
+    .row-meta { display: flex; align-items: baseline; gap: 7px; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .row-meta strong { color: var(--tone); font-size: 15px; font-variant-numeric: tabular-nums; }
+    .meter { height: 4px; margin-top: 8px; overflow: hidden; border-radius: 9px; background: #ffffff10; }
+    .meter span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--tone); transition: width .2s ease; }
+    .controls { display: flex; gap: 8px; }
+    .step {
+      display: grid; place-items: center; width: 48px; height: 48px; padding: 0;
+      border: 1px solid #3b4c63; border-radius: 15px; background: var(--panel-soft);
+      font-size: 25px; font-weight: 400; line-height: 1;
+    }
+    .step.plus { border-color: color-mix(in srgb, var(--tone), transparent 68%); background: color-mix(in srgb, var(--tone), #19263a 88%); color: var(--tone); }
+    .step:active, .icon-button:active { transform: scale(.96); }
+    .step:disabled { opacity: .35; cursor: not-allowed; }
+    .pending {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-top: 11px; padding: 13px 15px; border: 1px dashed #42516a; border-radius: 15px;
+      color: var(--muted); font-size: 13px;
+    }
+    .pending strong { color: var(--text); font-size: 15px; font-variant-numeric: tabular-nums; }
+    .notice { min-height: 18px; margin: 8px 3px 0; color: var(--amber); font-size: 12px; }
+    .bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 5px 3px 0; color: var(--muted); font-size: 11px; }
+    .reset { border: 0; padding: 10px 0 10px 10px; background: transparent; color: #aab8ca; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+    .install { display: none; width: 100%; min-height: 48px; margin: 14px 0 0; border: 0; border-radius: 15px; background: var(--mint); color: #10251f; font-weight: 750; }
+    .install.visible { display: block; }
+    @media (max-width: 360px) {
+      body { padding-inline: 11px; }
+      .row { padding-left: 11px; gap: 6px; }
+      .row-title { font-size: 12px; }
+      .step { width: 43px; height: 46px; }
+      .controls { gap: 6px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">↗</div>
+        <div><h1>Cuốc xe</h1><p class="subhead">Bộ đếm trong ngày</p></div>
+      </div>
+      <button class="icon-button" id="installTop" type="button" aria-label="Cài ứng dụng" title="Cài ứng dụng" hidden>↓</button>
+    </header>
 
+    <section class="hero" aria-label="Tỉ lệ hoàn thành">
+      <div class="hero-label">Tỉ lệ hoàn thành</div>
+      <div class="hero-value"><span id="completionRate">0,0</span><small>%</small></div>
+      <div class="hero-foot"><span><strong id="completedHero">0</strong> cuốc xong</span><span>trên <strong id="receivedHero">0</strong> cuốc báo</span></div>
+    </section>
+
+    <h2 class="section-title">Thống kê cuốc</h2>
+    <section class="rows" id="rows" aria-label="Thống kê và điều chỉnh số cuốc">
+      <article class="row" data-key="received">
+        <div class="row-main"><div class="row-title"><span class="dot"></span>Cuốc báo đến</div><div class="row-meta"><strong id="count-received">0</strong><span>100% tổng cuốc</span></div><div class="meter"><span id="bar-received"></span></div></div>
+        <div class="controls"><button class="step minus" data-key="received" data-delta="-1" aria-label="Giảm cuốc báo đến">−</button><button class="step plus" data-key="received" data-delta="1" aria-label="Tăng cuốc báo đến">+</button></div>
+      </article>
+      <article class="row" data-key="dropped">
+        <div class="row-main"><div class="row-title"><span class="dot"></span>Cuốc bỏ rơi</div><div class="row-meta"><strong id="count-dropped">0</strong><span id="rate-dropped">0,0%</span></div><div class="meter"><span id="bar-dropped"></span></div></div>
+        <div class="controls"><button class="step minus" data-key="dropped" data-delta="-1" aria-label="Giảm cuốc bỏ rơi">−</button><button class="step plus" data-key="dropped" data-delta="1" aria-label="Tăng cuốc bỏ rơi">+</button></div>
+      </article>
+      <article class="row" data-key="completed">
+        <div class="row-main"><div class="row-title"><span class="dot"></span>Cuốc hoàn thành</div><div class="row-meta"><strong id="count-completed">0</strong><span id="rate-completed">0,0%</span></div><div class="meter"><span id="bar-completed"></span></div></div>
+        <div class="controls"><button class="step minus" data-key="completed" data-delta="-1" aria-label="Giảm cuốc hoàn thành">−</button><button class="step plus" data-key="completed" data-delta="1" aria-label="Tăng cuốc hoàn thành">+</button></div>
+      </article>
+      <article class="row" data-key="customerCancelled">
+        <div class="row-main"><div class="row-title"><span class="dot"></span>Khách hủy</div><div class="row-meta"><strong id="count-customerCancelled">0</strong><span id="rate-customerCancelled">0,0%</span></div><div class="meter"><span id="bar-customerCancelled"></span></div></div>
+        <div class="controls"><button class="step minus" data-key="customerCancelled" data-delta="-1" aria-label="Giảm cuốc khách hủy">−</button><button class="step plus" data-key="customerCancelled" data-delta="1" aria-label="Tăng cuốc khách hủy">+</button></div>
+      </article>
+      <article class="row" data-key="driverCancelled">
+        <div class="row-main"><div class="row-title"><span class="dot"></span>Tôi hủy</div><div class="row-meta"><strong id="count-driverCancelled">0</strong><span id="rate-driverCancelled">0,0%</span></div><div class="meter"><span id="bar-driverCancelled"></span></div></div>
+        <div class="controls"><button class="step minus" data-key="driverCancelled" data-delta="-1" aria-label="Giảm cuốc tôi hủy">−</button><button class="step plus" data-key="driverCancelled" data-delta="1" aria-label="Tăng cuốc tôi hủy">+</button></div>
+      </article>
+    </section>
+    <div class="pending"><span>Chưa có kết quả</span><strong><span id="pendingCount">0</span> <span id="pendingRate">0,0%</span></strong></div>
+    <p class="notice" id="notice" role="status" aria-live="polite"></p>
+    <div class="bottom"><span>Tự lưu trên thiết bị</span><button class="reset" id="reset" type="button">Đặt lại ngày</button></div>
+    <button class="install" id="installButton" type="button">Cài vào màn hình chính</button>
+  </main>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = 'cuoc-xe-counts-v1';
+      const keys = ['received', 'dropped', 'completed', 'customerCancelled', 'driverCancelled'];
+      const outcomes = keys.slice(1);
+      const fresh = () => ({ received: 0, dropped: 0, completed: 0, customerCancelled: 0, driverCancelled: 0 });
+      const clampState = (input) => {
+        const state = fresh();
+        if (!input || typeof input !== 'object') return state;
+        keys.forEach((key) => { state[key] = Number.isSafeInteger(input[key]) && input[key] >= 0 ? input[key] : 0; });
+        // Ignore invalid/stale saved data rather than restoring impossible totals.
+        let remaining = state.received;
+        outcomes.forEach((key) => { state[key] = Math.min(state[key], remaining); remaining -= state[key]; });
+        return state;
+      };
+      let counts;
+      try { counts = clampState(JSON.parse(localStorage.getItem(STORAGE_KEY))); } catch { counts = fresh(); }
+      const numberFormat = new Intl.NumberFormat('vi-VN');
+      const percentFormat = new Intl.NumberFormat('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const totalOutcomes = () => outcomes.reduce((sum, key) => sum + counts[key], 0);
+      const percent = (value) => counts.received ? percentFormat.format(value / counts.received * 100) : '0,0';
+      const notice = document.getElementById('notice');
+
+      function render() {
+        const pending = Math.max(0, counts.received - totalOutcomes());
+        keys.forEach((key) => {
+          document.getElementById(`count-${key}`).textContent = numberFormat.format(counts[key]);
+          const rate = key === 'received' ? 100 : (counts.received ? counts[key] / counts.received * 100 : 0);
+          const rateNode = document.getElementById(`rate-${key}`);
+          if (rateNode) rateNode.textContent = `${percent(counts[key])}%`;
+          document.getElementById(`bar-${key}`).style.width = `${Math.min(100, rate)}%`;
+          document.querySelectorAll(`button[data-key="${key}"]`).forEach((button) => {
+            const delta = Number(button.dataset.delta);
+            button.disabled = delta < 0 ? counts[key] === 0 || (key === 'received' && counts.received <= totalOutcomes()) : (key !== 'received' && totalOutcomes() >= counts.received);
+          });
+        });
+        document.getElementById('completionRate').textContent = percent(counts.completed);
+        document.getElementById('completedHero').textContent = numberFormat.format(counts.completed);
+        document.getElementById('receivedHero').textContent = numberFormat.format(counts.received);
+        document.getElementById('pendingCount').textContent = numberFormat.format(pending);
+        document.getElementById('pendingRate').textContent = `${percent(pending)}%`;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(counts)); } catch { /* App remains usable if storage is unavailable. */ }
+      }
+
+      document.getElementById('rows').addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-key]');
+        if (!button || button.disabled) return;
+        const key = button.dataset.key;
+        const delta = Number(button.dataset.delta);
+        if (delta > 0 && key !== 'received' && totalOutcomes() >= counts.received) {
+          notice.textContent = 'Số kết quả không thể vượt số cuốc báo đến.';
+          return;
+        }
+        if (delta < 0 && key === 'received' && counts.received <= totalOutcomes()) {
+          notice.textContent = 'Giảm kết quả trước khi giảm cuốc báo đến.';
+          return;
+        }
+        counts[key] += delta;
+        notice.textContent = '';
+        render();
+      });
+      document.getElementById('reset').addEventListener('click', () => {
+        if (!keys.some((key) => counts[key] > 0) || window.confirm('Đặt lại toàn bộ số cuốc hôm nay?')) {
+          counts = fresh(); notice.textContent = ''; render();
+        }
+      });
+
+      let installPrompt;
+      const installButtons = [document.getElementById('installTop'), document.getElementById('installButton')];
+      const showInstall = () => installButtons.forEach((button) => { button.hidden = false; button.classList.add('visible'); });
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault(); installPrompt = event; showInstall();
+      });
+      installButtons.forEach((button) => button.addEventListener('click', async () => {
+        if (!installPrompt) {
+          notice.textContent = 'Chọn меню trình duyệt → Thêm vào màn hình chính.';
+          return;
+        }
+        installPrompt.prompt();
+        await installPrompt.userChoice;
+        installPrompt = null;
+        installButtons.forEach((item) => { item.hidden = true; item.classList.remove('visible'); });
+      }));
+      window.addEventListener('appinstalled', () => installButtons.forEach((button) => { button.hidden = true; button.classList.remove('visible'); }));
+      if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+      }
+      render();
+    })();
+  </script>
+</body>
+</html>
