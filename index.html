@@ -169,19 +169,53 @@
             shiftStartTime: null,
             elapsedSeconds: 0
         };
+
         let timerInterval = null;
+        let toastTimeout = null;
 
         function showToast(msg) {
             const t = document.getElementById('toast');
             if (!t) return;
             t.textContent = msg;
             t.style.opacity = '1';
-            clearTimeout(showToast.timeout);
-            showToast.timeout = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                t.style.opacity = '0';
+            }, 2000);
         }
 
         function saveState() {
             localStorage.setItem('driver_app_state_v3', JSON.stringify(state));
+        }
+
+        function toggleRounding() {
+            state.roundingEnabled = !state.roundingEnabled;
+            saveState();
+            render();
+            showToast(state.roundingEnabled ? 'Đã bật làm tròn trần' : 'Đã tắt làm tròn trần');
+        }
+
+        function resetAll() {
+            state.ignored = 0;
+            state.completed = 0;
+            state.customerCancel = 0;
+            state.driverCancel = 0;
+            saveState();
+            render();
+            showToast('Đã đặt lại toàn bộ');
+        }
+
+        function updateCount(type, delta) {
+            if (delta > 0) {
+                state[type] += delta;
+            } else if (state[type] > 0) {
+                state[type] += delta;
+            } else {
+                showToast('Số lượng đã bằng 0!');
+                return;
+            }
+            saveState();
+            render();
         }
 
         function render() {
@@ -193,20 +227,24 @@
             document.getElementById('valDriverCancel').textContent = state.driverCancel;
 
             const denomCompletion = incoming - state.customerCancel;
-            const rawCompletionVal = Math.min(100, denomCompletion > 0 ? (state.completed / denomCompletion) * 100 : 100);
-            const rawAcceptVal = incoming > 0 ? ((incoming - state.ignored) / incoming) * 100 : 100;
+            let rawCompletionVal = denomCompletion > 0 ? (state.completed / denomCompletion) * 100 : 100;
+            if (rawCompletionVal > 100) rawCompletionVal = 100;
+
+            let rawAcceptVal = incoming > 0 ? ((incoming - state.ignored) / incoming) * 100 : 100;
             const totalAccepted = incoming - state.ignored;
-            const rawDriverCancelVal = totalAccepted > 0 ? (state.driverCancel / totalAccepted) * 100 : 0;
-            const rawCustomerCancelVal = incoming > 0 ? (state.customerCancel / incoming) * 100 : 0;
+            let rawDriverCancelVal = totalAccepted > 0 ? (state.driverCancel / totalAccepted) * 100 : 0;
+            let rawCustomerCancelVal = incoming > 0 ? (state.customerCancel / incoming) * 100 : 0;
 
             document.getElementById('rawCompletion').textContent = rawCompletionVal.toFixed(1) + '%';
             document.getElementById('rawAccept').textContent = rawAcceptVal.toFixed(1) + '%';
             document.getElementById('rawDriverCancel').textContent = rawDriverCancelVal.toFixed(1) + '%';
             document.getElementById('rawCustomerCancel').textContent = rawCustomerCancelVal.toFixed(1) + '%';
+
             document.getElementById('pctCompletion').textContent = state.roundingEnabled ? Math.ceil(rawCompletionVal) + '%' : rawCompletionVal.toFixed(2) + '%';
             document.getElementById('pctAccept').textContent = state.roundingEnabled ? Math.ceil(rawAcceptVal) + '%' : rawAcceptVal.toFixed(2) + '%';
             document.getElementById('pctDriverCancel').textContent = state.roundingEnabled ? Math.ceil(rawDriverCancelVal) + '%' : rawDriverCancelVal.toFixed(2) + '%';
             document.getElementById('pctCustomerCancel').textContent = state.roundingEnabled ? Math.ceil(rawCustomerCancelVal) + '%' : rawCustomerCancelVal.toFixed(2) + '%';
+
             document.getElementById('barCompletion').style.width = rawCompletionVal + '%';
             document.getElementById('barAccept').style.width = rawAcceptVal + '%';
             document.getElementById('barDriverCancel').style.width = rawDriverCancelVal + '%';
@@ -223,44 +261,20 @@
             }
         }
 
-        function toggleRounding() {
-            state.roundingEnabled = !state.roundingEnabled;
-            saveState();
-            render();
-            showToast(state.roundingEnabled ? 'Đã bật làm tròn trần' : 'Đã tắt làm tròn trần');
-        }
-
-        function updateCount(type, delta) {
-            if (delta > 0) state[type] += delta;
-            else if (state[type] > 0) state[type] += delta;
-            else {
-                showToast('Số lượng đã bằng 0!');
-                return;
-            }
-            saveState();
-            render();
-        }
-
-        function resetAll() {
-            state.ignored = 0;
-            state.completed = 0;
-            state.customerCancel = 0;
-            state.driverCancel = 0;
-            saveState();
-            render();
-            showToast('Đã đặt lại toàn bộ');
-        }
-
         function switchTab(tab) {
             const navRate = document.getElementById('navTabRate');
             const navBonus = document.getElementById('navTabBonus');
             const navEarnings = document.getElementById('navTabEarnings');
-            [navRate, navBonus, navEarnings].forEach((el) => {
-                if (el) el.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
-            });
-            if (tab === 'rate') navRate.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
-            else if (tab === 'bonus') navBonus.className = 'btn-touch flex flex-col items-center gap-1 text-amber-600 font-extrabold text-[11px]';
-            else if (tab === 'earnings') navEarnings.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
+            navRate.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
+            navBonus.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
+            navEarnings.className = 'btn-touch flex flex-col items-center gap-1 text-slate-400 font-extrabold text-[11px]';
+            if (tab === 'rate') {
+                navRate.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
+            } else if (tab === 'bonus') {
+                navBonus.className = 'btn-touch flex flex-col items-center gap-1 text-amber-600 font-extrabold text-[11px]';
+            } else if (tab === 'earnings') {
+                navEarnings.className = 'btn-touch flex flex-col items-center gap-1 text-emerald-600 font-extrabold text-[11px]';
+            }
         }
 
         function toggleShiftTimer() {
@@ -310,6 +324,7 @@
             const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
             const dispEl = document.getElementById('timerDisplay');
             if (dispEl) dispEl.textContent = timeStr;
+
             const btn = document.getElementById('timerToggleBtn');
             const btnIcon = document.getElementById('timerBtnIcon');
             const btnText = document.getElementById('timerBtnText');
