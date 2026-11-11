@@ -1,15 +1,21 @@
 {
-  "name": "Cuốc xe",
-  "short_name": "Cuốc xe",
-  "description": "Bộ đếm cuốc xe cho tài xế công nghệ",
+  "id": "./",
+  "name": "Trợ Lý Cuốc Xe Tài Xế",
+  "short_name": "Cuốc Xe",
+  "description": "Bộ đếm cuốc xe, theo dõi tỉ lệ và quản lý thu nhập cho tài xế công nghệ.",
   "lang": "vi",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#101a2b",
-  "theme_color": "#101a2b",
+  "background_color": "#f1f5f9",
+  "theme_color": "#10b981",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
   ]
 }
