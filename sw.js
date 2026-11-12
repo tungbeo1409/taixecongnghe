@@ -1,24 +1,25 @@
-const CACHE_NAME = 'cuoc-xe-v3';
-const APP_FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './mobile.css'];
+const CACHE_NAME = 'cuoc-xe-v4';
+const APP_FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './mobile.css', './bonus.js'];
 const STYLE_LINK = '<link rel="stylesheet" href="./mobile.css" data-pwa-mobile-style>';
+const BONUS_SCRIPT = '<script src="./bonus.js"></script>';
 
 async function addMobileStylesheet(response) {
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return response;
 
   const html = await response.text();
-  if (html.includes('data-pwa-mobile-style') || !html.includes('</head>')) {
-    return new Response(html, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers
-    });
+  let updatedHtml = html;
+  if (!updatedHtml.includes('data-pwa-mobile-style') && updatedHtml.includes('</head>')) {
+    updatedHtml = updatedHtml.replace('</head>', `${STYLE_LINK}\n</head>`);
+  }
+  if (!updatedHtml.includes('src="./bonus.js"') && updatedHtml.includes('</body>')) {
+    updatedHtml = updatedHtml.replace('</body>', `${BONUS_SCRIPT}\n</body>`);
   }
 
   const headers = new Headers(response.headers);
   headers.delete('content-length');
   headers.delete('content-encoding');
-  return new Response(html.replace('</head>', `${STYLE_LINK}\n</head>`), {
+  return new Response(updatedHtml, {
     status: response.status,
     statusText: response.statusText,
     headers
